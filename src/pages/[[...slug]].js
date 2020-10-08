@@ -284,7 +284,9 @@ function Pen({
           <>
             {(!isMd || size.layout !== 'preview') && (
               <TabBar
-                width={size.layout === 'vertical' ? size.current : '100%'}
+                width={
+                  size.layout === 'vertical' && isMd ? size.current : '100%'
+                }
                 isLoading={isLoading}
                 showPreviewTab={!isMd}
                 activeTab={
