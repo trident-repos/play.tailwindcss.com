@@ -161,7 +161,7 @@ export function Share({
           Whoops! Something went wrong. Please try again.
         </p>
       )}
-      {(state === 'copied' || state === 'disabled') && (
+      {(state === 'copied' || state === 'disabled') && path && (
         <button
           type="button"
           className="group flex-auto min-w-0 flex items-center space-x-1.5 text-sm leading-5 font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
