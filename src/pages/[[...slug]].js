@@ -337,9 +337,6 @@ function Pen({
                   responsiveSize={responsiveSize}
                   onChangeResponsiveSize={setResponsiveSize}
                   iframeClassName={resizing ? 'pointer-events-none' : ''}
-                  className={
-                    'mt-10 border-t border-gray-200 dark:border-gray-600 md:mt-0 md:border-0'
-                  }
                   onLoad={() => {
                     inject({
                       html: initialContent.html,

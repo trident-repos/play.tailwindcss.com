@@ -9,7 +9,6 @@ export const Preview = forwardRef(
       responsiveSize,
       onChangeResponsiveSize,
       onLoad,
-      className = '',
       iframeClassName = '',
     },
     ref
@@ -212,10 +211,7 @@ export const Preview = forwardRef(
 
     return (
       <div
-        className={clsx(
-          'absolute inset-0 w-full h-full flex flex-col bg-gray-50 dark:bg-black',
-          className
-        )}
+        className="absolute inset-0 top-10 md:top-0 flex flex-col border-t border-gray-200 dark:border-gray-600 md:border-0 bg-gray-50 dark:bg-black"
         ref={containerRef}
       >
         {responsiveDesignMode && (
