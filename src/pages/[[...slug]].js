@@ -401,33 +401,26 @@ export async function getServerSideProps({ params, res, query }) {
       ID: params.slug[0],
     })
 
-    if (initialContent) {
-      res.setHeader(
-        'cache-control',
-        'public, max-age=0, must-revalidate, s-maxage=31536000'
-      )
-    }
+    res.setHeader(
+      'cache-control',
+      'public, max-age=0, must-revalidate, s-maxage=31536000'
+    )
 
     return {
-      props: initialContent
-        ? {
-            initialContent,
-            initialPath: `/${initialContent.ID}${getLayoutQueryString({
-              layout: query.layout,
-              responsiveSize: query.size,
-              file: query.file,
-            })}`,
-            ...layoutProps,
-          }
-        : {
-            errorCode: 404,
-          },
+      props: {
+        initialContent,
+        initialPath: `/${initialContent.ID}${getLayoutQueryString({
+          layout: query.layout,
+          responsiveSize: query.size,
+          file: query.file,
+        })}`,
+        ...layoutProps,
+      },
     }
   } catch (error) {
-    console.error(error)
     return {
       props: {
-        errorCode: 500,
+        errorCode: error.status || 500,
       },
     }
   }
