@@ -31,7 +31,11 @@ export function put(item) {
 
 export function get(Key) {
   return new Promise((resolve, reject) => {
-    fetch(process.env.TW_API_URL + '/api/playgrounds/' + Key.ID)
+    fetch(process.env.TW_API_URL + '/api/playgrounds/' + Key.ID, {
+      headers: {
+        Accept: 'application/json',
+      },
+    })
       .then((response) => {
         return response.json()
       })
