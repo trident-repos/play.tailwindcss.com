@@ -37,6 +37,9 @@ export function get(Key) {
       },
     })
       .then((response) => {
+        if (!response.ok) {
+          reject(`No playground found with ID ${Key.ID}.`)
+        }
         return response.json()
       })
       .then((data) => {
