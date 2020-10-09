@@ -301,6 +301,7 @@ export const Preview = forwardRef(
                   'pointer-events-none select-none': resizing,
                 }
               )}
+              sandbox="allow-popups-to-escape-sandbox allow-scripts allow-popups allow-forms allow-pointer-lock allow-top-navigation allow-modals"
               srcDoc={`
                 <!DOCTYPE html>
                 <html>

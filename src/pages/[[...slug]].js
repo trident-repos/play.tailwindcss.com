@@ -84,16 +84,19 @@ function Pen({
       previewRef.current &&
       previewRef.current.contentWindow
     ) {
-      previewRef.current.contentWindow.postMessage({
-        clear: true,
-      })
+      previewRef.current.contentWindow.postMessage(
+        {
+          clear: true,
+        },
+        '*'
+      )
       inject({ html: initialContent.html })
       compileNow(initialContent)
     }
   }, [initialContent.ID])
 
   const inject = useCallback((content) => {
-    previewRef.current.contentWindow.postMessage(content)
+    previewRef.current.contentWindow.postMessage(content, '*')
   }, [])
 
   async function compileNow(content) {
@@ -117,7 +120,7 @@ function Pen({
     }
     setErrorImmediate()
     if (css) {
-      previewRef.current.contentWindow.postMessage({ css })
+      previewRef.current.contentWindow.postMessage({ css }, '*')
     }
   }
 
