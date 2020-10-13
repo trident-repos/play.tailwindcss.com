@@ -1,26 +1,30 @@
-const resolve = require('rollup-plugin-node-resolve')
-const commonjs = require('rollup-plugin-commonjs')
-const { rollup } = require('rollup')
-const { terser } = require('rollup-plugin-terser')
+const { buildSync } = require('esbuild')
 const path = require('path')
 const fs = require('fs').promises
+const versions = require('../preval/versions')
 
 const plugins = ['@tailwindcss/custom-forms', '@tailwindcss/ui']
 
 plugins.forEach(async (plugin) => {
   const pkg = require(`${plugin}/package.json`)
-  const bundle = await rollup({
-    input: path.resolve(__dirname, `../../node_modules/${plugin}`, pkg.main),
-    plugins: [resolve({ browser: true }), commonjs(), terser()],
-  })
 
-  const { output } = await bundle.generate({
+  const output = buildSync({
+    entryPoints: [
+      path.resolve(__dirname, `../../node_modules/${plugin}`, pkg.main),
+    ],
+    write: false,
+    minify: true,
+    bundle: true,
+    external: ['fs', 'path', 'util'],
     format: 'esm',
   })
 
-  await fs.mkdir(path.resolve(__dirname, '../../public/plugins'), {
-    recursive: true,
-  })
+  await fs.mkdir(
+    path.resolve(__dirname, '../../public/plugins', versions.pluginBuilder),
+    {
+      recursive: true,
+    }
+  )
 
   if (plugin.includes('/')) {
     const parts = plugin.split('/')
@@ -28,6 +32,7 @@ plugins.forEach(async (plugin) => {
       path.resolve(
         __dirname,
         '../../public/plugins',
+        versions.pluginBuilder,
         ...parts.slice(0, parts.length - 1)
       ),
       {
@@ -36,16 +41,16 @@ plugins.forEach(async (plugin) => {
     )
   }
 
+  const code = new TextDecoder('utf-8').decode(output.outputFiles[0].contents)
+
   await fs.writeFile(
     path.resolve(
       __dirname,
       '../../public/plugins',
+      versions.pluginBuilder,
       `${plugin}@${pkg.version}.js`
     ),
-    output[0].code.replace(
-      /import ([^ ]+) from *['"]util['"]/,
-      (_m, name) => `var ${name}={deprecate:_=>_}`
-    ),
+    'var require = () => ({ deprecate: _ => _ });' + code,
     'utf8'
   )
 })
