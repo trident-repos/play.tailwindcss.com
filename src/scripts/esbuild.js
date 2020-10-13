@@ -1,6 +1,7 @@
 const { buildSync } = require('esbuild')
 const path = require('path')
 const fs = require('fs').promises
+const versions = require('../preval/versions')
 
 const plugins = ['@tailwindcss/custom-forms', '@tailwindcss/ui']
 
@@ -18,9 +19,12 @@ plugins.forEach(async (plugin) => {
     format: 'esm',
   })
 
-  await fs.mkdir(path.resolve(__dirname, '../../public/plugins'), {
-    recursive: true,
-  })
+  await fs.mkdir(
+    path.resolve(__dirname, '../../public/plugins', versions.pluginBuilder),
+    {
+      recursive: true,
+    }
+  )
 
   if (plugin.includes('/')) {
     const parts = plugin.split('/')
@@ -28,6 +32,7 @@ plugins.forEach(async (plugin) => {
       path.resolve(
         __dirname,
         '../../public/plugins',
+        versions.pluginBuilder,
         ...parts.slice(0, parts.length - 1)
       ),
       {
@@ -42,6 +47,7 @@ plugins.forEach(async (plugin) => {
     path.resolve(
       __dirname,
       '../../public/plugins',
+      versions.pluginBuilder,
       `${plugin}@${pkg.version}.js`
     ),
     'var require = () => ({ deprecate: _ => _ });' + code,
