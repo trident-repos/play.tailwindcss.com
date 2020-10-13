@@ -36,7 +36,7 @@ plugins.forEach(async (plugin) => {
     )
   }
 
-  const code = new TextDecoder("utf-8").decode(output.outputFiles[0].contents)
+  const code = new TextDecoder('utf-8').decode(output.outputFiles[0].contents)
 
   await fs.writeFile(
     path.resolve(
@@ -44,7 +44,7 @@ plugins.forEach(async (plugin) => {
       '../../public/plugins',
       `${plugin}@${pkg.version}.js`
     ),
-    'var require = () => ({ deprecate: _ => _ });'+code,
+    'var require = () => ({ deprecate: _ => _ });' + code,
     'utf8'
   )
 })
