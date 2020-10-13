@@ -79,14 +79,6 @@ module.exports = () => {
       spacing: {
         7: '1.75rem',
       },
-      borderRadius: {
-        xl: '12px',
-        '2xl': '16px',
-        '3xl': '24px',
-      },
-      rotate: {
-        '-6': '-6deg',
-      },
     },
   },
   variants: {},
@@ -110,14 +102,6 @@ module.exports = () => {
         extend: {
           spacing: {
             7: '1.75rem',
-          },
-          borderRadius: {
-            xl: '12px',
-            '2xl': '16px',
-            '3xl': '24px',
-          },
-          rotate: {
-            '-6': '-6deg',
           },
         },
       },
