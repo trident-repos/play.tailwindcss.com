@@ -36,15 +36,21 @@ type PurgeConfig =
   /** Explicit enabled/disabled + purge options */
   | { enabled: boolean; options: { content: string[]; whitelist: string[] } };
 
-type FutureSettings = "removeDeprecatedGapUtilities";
+type FutureSettings =
+  | "removeDeprecatedGapUtilities"
+  | "purgeLayersByDefault"
+  | "defaultLineHeights"
+  | "standardFontWeights";
+
 type FutureConfig = "all" | Record<FutureSettings, boolean> | FutureSettings[];
 
 type ExperimentalSettings =
   | "uniformColorPalette"
   | "extendedSpacingScale"
-  | "defaultLineHeights"
   | "extendedFontSizeScale"
-  | "applyComplexClasses";
+  | "applyComplexClasses"
+  | "darkModeVariant"
+  | "additionalBreakpoint";
 
 type ExperimentalConfig =
   | "all"
@@ -79,6 +85,9 @@ type ThemeConfig = Partial<{
 
   /** Shadow */
   boxShadow: ResolvableTo<KeyValuePair>;
+
+  /** Outline */
+  outline: ResolvableTo<KeyValuePair>;
 
   /** Cursor */
   cursor: ResolvableTo<KeyValuePair>;
@@ -257,6 +266,7 @@ type PluginsConfig = (PluginCreator | { handler: PluginCreator, config?: Tailwin
 /** The holy grail Tailwind config definition */
 export type TailwindConfig = Partial<
   BaseConfig & {
+    presets: TailwindConfig[];
     future: FutureConfig;
     experimental: ExperimentalConfig;
     purge: PurgeConfig;
