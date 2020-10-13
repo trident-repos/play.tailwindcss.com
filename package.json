@@ -2,7 +2,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build:plugins": "node src/scripts/esbuild.js",
+    "build:plugins": "node src/scripts/buildBuiltinPlugins.js",
     "build": "npm run build:plugins && next build",
     "start": "next start"
   },
