@@ -12,6 +12,7 @@ export function createMonacoEditor({
   initialContent,
   onChange,
   worker,
+  tailwindVersion,
 }) {
   let editor
   const disposables = []
@@ -54,7 +55,8 @@ export function createMonacoEditor({
     () => {
       triggerOnChange('config')
     },
-    () => editor
+    () => editor,
+    tailwindVersion
   )
   disposables.push(config)
 
@@ -141,6 +143,9 @@ export function createMonacoEditor({
       window.setTimeout(() => {
         shouldTriggerOnChange = true
       }, 0)
+    },
+    setTailwindVersion(tailwindVersion) {
+      config.setTailwindVersion(tailwindVersion)
     },
     dispose() {
       disposables.forEach((disposable) => disposable.dispose())

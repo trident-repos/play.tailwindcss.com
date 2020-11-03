@@ -1,4 +1,4 @@
-const { buildSync } = require('esbuild')
+const { build } = require('esbuild')
 const path = require('path')
 const fs = require('fs').promises
 const versions = require('../preval/versions')
@@ -8,7 +8,7 @@ const plugins = ['@tailwindcss/custom-forms', '@tailwindcss/ui']
 plugins.forEach(async (plugin) => {
   const pkg = require(`${plugin}/package.json`)
 
-  const output = buildSync({
+  const output = await build({
     entryPoints: [
       path.resolve(__dirname, `../../node_modules/${plugin}`, pkg.main),
     ],
@@ -17,6 +17,20 @@ plugins.forEach(async (plugin) => {
     bundle: true,
     external: ['fs', 'path', 'util'],
     format: 'esm',
+    plugins: [
+      {
+        name: 'v1',
+        setup(build) {
+          build.onResolve({ filter: /^tailwindcss(\/|$)/ }, (args) => ({
+            path:
+              args.path.replace(
+                /^tailwindcss/,
+                path.resolve(__dirname, '../../node_modules/tailwindcss-v1')
+              ) + '.js',
+          }))
+        },
+      },
+    ],
   })
 
   await fs.mkdir(

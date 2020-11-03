@@ -18,7 +18,7 @@ export function createWorkerQueue(Worker) {
               resolve(event.data)
             }
             worker.addEventListener('message', onMessage)
-            worker.postMessage({ _id, ...data })
+            worker.postMessage({ ...data, _id })
           })
       )
     },
@@ -37,6 +37,6 @@ export function requestResponse(worker, data) {
       resolve(event.data)
     }
     worker.addEventListener('message', onMessage)
-    worker.postMessage({ _id, ...data })
+    worker.postMessage({ ...data, _id })
   })
 }

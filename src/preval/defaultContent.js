@@ -89,13 +89,10 @@ module.exports = () => {
 
   postcss([
     tailwindcss({
-      future: {
-        purgeLayersByDefault: true,
-      },
       purge: {
         enabled: true,
         content: [{ raw: html }],
-        options: { keyframes: true, whitelist: ['html', 'body'] },
+        options: { keyframes: true, safelist: ['html', 'body'] },
         preserveHtmlElements: false,
       },
       theme: {

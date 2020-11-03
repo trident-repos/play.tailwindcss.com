@@ -6,4 +6,5 @@ module.exports = {
   '@tailwindcss/ui': require('@tailwindcss/ui/package.json').version,
   'monaco-editor': require('monaco-editor/package.json').version,
   tailwindcss: require('tailwindcss/package.json').version,
+  'tailwindcss-v1': require('tailwindcss-v1/package.json').version,
 }

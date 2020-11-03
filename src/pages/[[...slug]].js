@@ -24,6 +24,7 @@ import { TabBar } from '../components/TabBar'
 import { sizeToObject } from '../utils/size'
 import { getLayoutQueryString } from '../utils/getLayoutQueryString'
 import { get } from '../utils/database'
+import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
 
 const HEADER_HEIGHT = 60 - 1
 const TAB_BAR_HEIGHT = 40
@@ -66,6 +67,9 @@ function Pen({
   const [responsiveSize, setResponsiveSize] = useState(
     initialResponsiveSize || DEFAULT_RESPONSIVE_SIZE
   )
+  const [tailwindVersion, setTailwindVersion] = useState(
+    toValidTailwindVersion(initialContent.tailwindVersion)
+  )
 
   useEffect(() => {
     setDirty(true)
@@ -79,6 +83,7 @@ function Pen({
 
   useEffect(() => {
     setDirty(false)
+    setTailwindVersion(toValidTailwindVersion(initialContent.tailwindVersion))
     if (
       shouldClearOnUpdate &&
       previewRef.current &&
@@ -91,7 +96,11 @@ function Pen({
         '*'
       )
       inject({ html: initialContent.html })
-      compileNow(initialContent)
+      compileNow({
+        css: initialContent.css,
+        config: initialContent.config,
+        tailwindVersion: toValidTailwindVersion(initialContent.tailwindVersion),
+      })
     }
   }, [initialContent.ID])
 
@@ -100,16 +109,18 @@ function Pen({
   }, [])
 
   async function compileNow(content) {
-    let validateResult = await validateJavaScript(content.config)
-    if (!validateResult.isValid) {
-      return setError({ ...validateResult.error, file: 'Config' })
+    if (content.config) {
+      let validateResult = await validateJavaScript(content.config)
+      if (!validateResult.isValid) {
+        return setError({ ...validateResult.error, file: 'Config' })
+      }
     }
     cancelSetError()
     setIsLoading(true)
-    const { css, canceled, error } = await requestResponse(worker.current, {
-      config: content.config,
-      css: content.css,
-    })
+    const { css, canceled, error } = await requestResponse(
+      worker.current,
+      content
+    )
     if (canceled) {
       return
     }
@@ -270,6 +281,11 @@ function Pen({
         onToggleResponsiveDesignMode={() =>
           setResponsiveDesignMode(!responsiveDesignMode)
         }
+        tailwindVersion={tailwindVersion}
+        onChangeTailwindVersion={(version) => {
+          setTailwindVersion(version)
+          compileNow({ _recompile: true, tailwindVersion: version })
+        }}
       >
         <Share
           editorRef={editorRef}
@@ -330,6 +346,7 @@ function Pen({
                     onChange={onChange}
                     worker={worker}
                     activeTab={activeTab}
+                    tailwindVersion={tailwindVersion}
                   />
                 )}
               </div>
@@ -347,7 +364,11 @@ function Pen({
                         ? { css: defaultContent.compiledCss }
                         : {}),
                     })
-                    compileNow(initialContent)
+                    compileNow({
+                      css: initialContent.css,
+                      config: initialContent.config,
+                      tailwindVersion: initialContent.tailwindVersion,
+                    })
                   }}
                 />
                 <ErrorOverlay error={error} />

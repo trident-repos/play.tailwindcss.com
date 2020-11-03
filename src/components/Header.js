@@ -7,6 +7,8 @@ export function Header({
   onChangeLayout,
   responsiveDesignMode,
   onToggleResponsiveDesignMode,
+  tailwindVersion,
+  onChangeTailwindVersion,
   children,
 }) {
   return (
@@ -16,6 +18,15 @@ export function Header({
         {children}
       </div>
       <div className="flex items-center space-x-5">
+        <select
+          value={tailwindVersion.toString()}
+          onChange={(e) =>
+            onChangeTailwindVersion(parseInt(e.target.value, 10))
+          }
+        >
+          <option value="1">v1</option>
+          <option value="2">v2</option>
+        </select>
         <div className="hidden md:flex items-center space-x-3.5">
           <HeaderButton
             isActive={layout === 'vertical'}
