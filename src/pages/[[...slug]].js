@@ -68,7 +68,7 @@ function Pen({
     initialResponsiveSize || DEFAULT_RESPONSIVE_SIZE
   )
   const [tailwindVersion, setTailwindVersion] = useState(
-    toValidTailwindVersion(initialContent.tailwindVersion)
+    toValidTailwindVersion(initialContent.version)
   )
 
   useEffect(() => {
@@ -83,7 +83,7 @@ function Pen({
 
   useEffect(() => {
     setDirty(false)
-    setTailwindVersion(toValidTailwindVersion(initialContent.tailwindVersion))
+    setTailwindVersion(toValidTailwindVersion(initialContent.version))
     if (
       shouldClearOnUpdate &&
       previewRef.current &&
@@ -99,7 +99,7 @@ function Pen({
       compileNow({
         css: initialContent.css,
         config: initialContent.config,
-        tailwindVersion: toValidTailwindVersion(initialContent.tailwindVersion),
+        tailwindVersion: toValidTailwindVersion(initialContent.version),
       })
     }
   }, [initialContent.ID])
@@ -296,6 +296,7 @@ function Pen({
           layout={size.layout}
           responsiveSize={responsiveDesignMode ? responsiveSize : undefined}
           activeTab={activeTab}
+          tailwindVersion={tailwindVersion}
         />
       </Header>
       <main className="flex-auto relative border-t border-gray-200 dark:border-gray-800">
@@ -367,7 +368,7 @@ function Pen({
                     compileNow({
                       css: initialContent.css,
                       config: initialContent.config,
-                      tailwindVersion: initialContent.tailwindVersion,
+                      tailwindVersion: initialContent.version,
                     })
                   }}
                 />

@@ -20,10 +20,8 @@ export function Header({
       <div className="flex items-center space-x-5">
         <select
           className="text-black"
-          value={tailwindVersion.toString()}
-          onChange={(e) =>
-            onChangeTailwindVersion(parseInt(e.target.value, 10))
-          }
+          value={tailwindVersion}
+          onChange={(e) => onChangeTailwindVersion(e.target.value)}
         >
           <option value="1">v1</option>
           <option value="2">v2</option>

@@ -98,7 +98,7 @@ export function setupJavaScriptMode(
 
         disposables.push(
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            tailwindVersion === 1 ? types : typesV2,
+            tailwindVersion === '1' ? types : typesV2,
             'file:///node_modules/@types/tailwindcss/index.d.ts'
           )
         )
@@ -190,7 +190,7 @@ export function setupJavaScriptMode(
       if (model) {
         disposables.push(
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            tailwindVersion === 1 ? types : typesV2,
+            tailwindVersion === '1' ? types : typesV2,
             'file:///node_modules/@types/tailwindcss/index.d.ts'
           )
         )

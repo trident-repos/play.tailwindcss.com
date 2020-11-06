@@ -5,25 +5,25 @@ import extractClasses from './extractClasses'
 import { removeFunctions } from '../utils/object'
 import { getVariants } from '../utils/getVariants'
 
-const deps = [
-  [
+const deps = {
+  1: [
     () => import('tailwindcss-v1'),
     () => import('postcss-v7'),
     () => import('tailwindcss-v1/resolveConfig'),
     () => import('tailwindcss-v1/lib/featureFlags'),
   ],
-  [
+  2: [
     () => import('tailwindcss'),
     () => import('postcss'),
     () => import('tailwindcss/resolveConfig'),
     () => import('tailwindcss/lib/featureFlags'),
   ],
-]
+}
 
-export async function processCss(configInput, cssInput, tailwindVersion = 2) {
+export async function processCss(configInput, cssInput, tailwindVersion = '2') {
   const config = klona(configInput)
   const [tailwindcss, postcss, resolveConfig, featureFlags] = (
-    await Promise.all(deps[tailwindVersion - 1].map((x) => x()))
+    await Promise.all(deps[tailwindVersion].map((x) => x()))
   ).map((x) => x.default || x)
 
   const separator = config.separator || ':'
@@ -31,7 +31,7 @@ export async function processCss(configInput, cssInput, tailwindVersion = 2) {
   delete config.purge
 
   const applyComplexClasses =
-    tailwindVersion === 1
+    tailwindVersion === '1'
       ? require('tailwindcss-v1/lib/flagged/applyComplexClasses')
       : require('tailwindcss/lib/lib/substituteClassApplyAtRules')
 
@@ -86,7 +86,7 @@ export async function processCss(configInput, cssInput, tailwindVersion = 2) {
   state.variants = getVariants({ config: state.config, postcss })
   removeFunctions(state.config)
   state.version =
-    tailwindVersion === 1 ? versions['tailwindcss-v1'] : versions.tailwindcss
+    tailwindVersion === '1' ? versions['tailwindcss-v1'] : versions.tailwindcss
   state.editor = {
     userLanguages: {},
     capabilities: {},

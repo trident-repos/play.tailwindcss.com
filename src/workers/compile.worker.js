@@ -6,7 +6,7 @@ let current
 
 let lastCss
 let lastConfig
-let tailwindVersion = 2
+let tailwindVersion = '2'
 
 addEventListener('message', async (event) => {
   if (event.data._current) {

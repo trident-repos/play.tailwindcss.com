@@ -7,6 +7,7 @@ export function put(item) {
       },
       body: JSON.stringify({
         uuid: item.ID,
+        version: item.version,
         html: item.html,
         css: item.css,
         config: item.config,
@@ -18,6 +19,7 @@ export function put(item) {
       .then(({ uuid }) => {
         resolve({
           ID: uuid,
+          version: item.version,
           html: item.html,
           css: item.css,
           config: item.config,
