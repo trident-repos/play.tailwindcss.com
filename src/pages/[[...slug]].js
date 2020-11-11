@@ -378,6 +378,8 @@ export async function getServerSideProps({ params, res, query }) {
       : 'html',
   }
 
+  console.log(params.slug)
+
   if (!params.slug || params.slug.length === 0) {
     res.setHeader(
       'cache-control',
