@@ -378,7 +378,9 @@ export async function getServerSideProps({ params, res, query }) {
       : 'html',
   }
 
-  if (!params.slug) {
+  console.log(params.slug)
+
+  if (!params.slug || params.slug[0] === 'false') {
     res.setHeader(
       'cache-control',
       'public, max-age=0, must-revalidate, s-maxage=31536000'
