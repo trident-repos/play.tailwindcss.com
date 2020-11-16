@@ -1,4 +1,5 @@
-import { forwardRef, useEffect, useLayoutEffect, useState, useRef } from 'react'
+import { forwardRef, useEffect, useState, useRef } from 'react'
+import { useIsomorphicLayoutEffect } from '../hooks/useIsomorphicLayoutEffect'
 import clsx from 'clsx'
 import { getPointerPosition } from '../utils/getPointerPosition'
 
@@ -81,7 +82,7 @@ export const Preview = forwardRef(
       }
     }, [])
 
-    useLayoutEffect(() => {
+    useIsomorphicLayoutEffect(() => {
       if (size.width > 50 && size.height > 50) {
         onChangeResponsiveSize(({ width, height }) => ({ width, height }))
       }

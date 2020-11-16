@@ -1,4 +1,5 @@
-import { useRef, useEffect, useLayoutEffect, useState } from 'react'
+import { useRef, useEffect, useState } from 'react'
+import { useIsomorphicLayoutEffect } from '../hooks/useIsomorphicLayoutEffect'
 import CodeMirror from 'codemirror'
 import { tailwindcssMode } from '../codemirror/tailwindcssMode'
 import { onDidChangeTheme, getTheme } from '../utils/theme'
@@ -92,7 +93,7 @@ export default function EditorMobile({
     setI((i) => i + 1)
   }, [activeTab])
 
-  useLayoutEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (!cmRef.current) return
     cmRef.current.refresh()
     cmRef.current.focus()
