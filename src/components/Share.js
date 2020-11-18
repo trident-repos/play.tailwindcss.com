@@ -11,6 +11,7 @@ export function Share({
   activeTab,
   onShareStart,
   onShareComplete,
+  tailwindVersion,
 }) {
   const [{ state, path }, setState] = useState({
     state: 'disabled',
@@ -41,6 +42,7 @@ export function Share({
             html: editorRef.current.getValue('html'),
             css: editorRef.current.getValue('css'),
             config: editorRef.current.getValue('config'),
+            version: tailwindVersion,
           }),
         })
         .then((res) => {
@@ -87,7 +89,7 @@ export function Share({
     return () => {
       current = false
     }
-  }, [state, path, editorRef, onShareStart, onShareComplete])
+  }, [state, path, editorRef, onShareStart, onShareComplete, tailwindVersion])
 
   useEffect(() => {
     if (dirty) {

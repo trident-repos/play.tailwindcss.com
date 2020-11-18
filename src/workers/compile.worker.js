@@ -1,21 +1,27 @@
-import postcss from 'postcss'
-import tailwindcss from 'tailwindcss'
-import autoprefixer from 'autoprefixer'
-import featureFlags from 'tailwindcss/lib/featureFlags'
-import resolveConfig from 'tailwindcss/resolveConfig'
-import extractClasses from './extractClasses'
-import { removeFunctions } from '../utils/object'
-import { getVariants } from '../utils/getVariants'
 import versions from '../preval/versions'
-import { klona } from 'klona/full'
+import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
+import { processCss } from './processCss'
 
 let current
+
+let lastCss
+let lastConfig
+let tailwindVersion = '2'
 
 addEventListener('message', async (event) => {
   if (event.data._current) {
     current = event.data._current
     return
   }
+
+  const css = event.data._recompile ? lastCss : event.data.css
+  const config = event.data._recompile ? lastConfig : event.data.config
+  if ('tailwindVersion' in event.data) {
+    tailwindVersion = toValidTailwindVersion(event.data.tailwindVersion)
+  }
+
+  lastCss = css
+  lastConfig = config
 
   function respond(data) {
     setTimeout(() => {
@@ -50,7 +56,10 @@ addEventListener('message', async (event) => {
 
   const builtinPlugins = {
     _builderVersion: versions.pluginBuilder,
+    _tailwindVersion: tailwindVersion,
     '@tailwindcss/custom-forms': versions['@tailwindcss/custom-forms'],
+    '@tailwindcss/forms': versions['@tailwindcss/forms'],
+    '@tailwindcss/typography': versions['@tailwindcss/typography'],
     '@tailwindcss/ui': versions['@tailwindcss/ui'],
   }
 
@@ -65,7 +74,7 @@ addEventListener('message', async (event) => {
       let result
       try {
         const href = builtinPlugins[m]
-          ? '/plugins/' + builtinPlugins._builderVersion + '/' + m + '@' + builtinPlugins[m] + '.js'
+          ? '/plugins/' + builtinPlugins._builderVersion + '/v' + builtinPlugins._tailwindVersion + '/' + m + '@' + builtinPlugins[m] + '.js'
           : 'https://cdn.skypack.dev/' + m + '?min'
         result = await self.importShim(href)
       } catch (error) {
@@ -79,7 +88,7 @@ addEventListener('message', async (event) => {
     await eval(
       before +
         '\n' +
-        event.data.config
+        config
           .split('\n')
           .map((line, i) =>
             line.replace(
@@ -128,84 +137,15 @@ addEventListener('message', async (event) => {
     })
   }
 
-  let state = {}
-
   try {
-    const separator = mod.exports.separator || ':'
-    mod.exports.separator = `__TWSEP__${separator}__TWSEP__`
-    delete mod.exports.purge
-
-    // TODO
-    const applyComplexClasses = require('tailwindcss/lib/flagged/applyComplexClasses')
-    if (!applyComplexClasses.default.__patched) {
-      let _applyComplexClasses = applyComplexClasses.default
-      applyComplexClasses.default = (...args) => {
-        let fn = _applyComplexClasses(...args)
-        return (css) => {
-          css.walkRules((rule) => {
-            const newSelector = rule.selector.replace(
-              /__TWSEP__(.*?)__TWSEP__/g,
-              '$1'
-            )
-            if (newSelector !== rule.selector) {
-              rule.before(
-                postcss.comment({
-                  text: '__ORIGINAL_SELECTOR__:' + rule.selector,
-                })
-              )
-              rule.selector = newSelector
-            }
-          })
-          fn(css)
-          css.walkComments((comment) => {
-            if (comment.text.startsWith('__ORIGINAL_SELECTOR__:')) {
-              comment.next().selector = comment.text.replace(
-                /^__ORIGINAL_SELECTOR__:/,
-                ''
-              )
-              comment.remove()
-            }
-          })
-        }
-      }
-      applyComplexClasses.default.__patched = true
-    }
-
-    const { css, root } = await postcss([
-      tailwindcss(mod.exports),
-      autoprefixer(),
-    ]).process(event.data.css, { from: undefined })
-    mod.exports.separator = separator
-    state.classNames = await extractClasses(root)
-    state.separator = separator
-    state.config = resolveConfig(klona(mod.exports))
-    state.variants = getVariants({ config: state.config, postcss })
-    removeFunctions(state.config)
-    state.version = versions.tailwindcss
-    state.editor = {
-      userLanguages: {},
-      capabilities: {},
-      globalSettings: {
-        validate: true,
-        lint: {
-          cssConflict: 'warning',
-          invalidApply: 'error',
-          invalidScreen: 'error',
-          invalidVariant: 'error',
-          invalidConfigPath: 'error',
-          invalidTailwindDirective: 'error',
-        },
-      },
-    }
-    state.featureFlags = featureFlags
-    const escapedSeparator = separator.replace(/./g, (m) =>
-      /[a-z0-9-_]/i.test(m) ? m : `\\${m}`
+    const { css: compiledCss, state } = await processCss(
+      mod.exports,
+      css,
+      tailwindVersion
     )
-    respond({
-      state,
-      css: css.replace(/__TWSEP__.*?__TWSEP__/g, escapedSeparator),
-    })
+    respond({ state, css: compiledCss })
   } catch (error) {
+    console.log(error)
     if (error.toString().startsWith('CssSyntaxError')) {
       const match = error.message.match(
         /^<css input>:([0-9]+):([0-9]+): (.*?)$/

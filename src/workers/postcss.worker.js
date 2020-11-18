@@ -5,7 +5,7 @@ import {
   doValidate,
   doHover,
   getDocumentColors,
-} from 'twls-wip'
+} from 'tailwindcss-language-service'
 import {
   asCompletionResult as asMonacoCompletionResult,
   asCompletionItem as asMonacoCompletionItem,
@@ -89,13 +89,11 @@ addEventListener('message', async (event) => {
   }
 
   if (
-    typeof event.data.css !== 'undefined' &&
-    typeof event.data.config !== 'undefined'
+    (typeof event.data.css !== 'undefined' &&
+      typeof event.data.config !== 'undefined') ||
+    event.data._recompile
   ) {
-    const result = await compileWorker.emit({
-      css: event.data.css,
-      config: event.data.config,
-    })
+    const result = await compileWorker.emit(event.data)
 
     if (!result.error && !result.canceled) {
       state = result.state

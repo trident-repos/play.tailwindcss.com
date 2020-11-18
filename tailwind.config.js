@@ -1,15 +1,7 @@
 const defaultTheme = require('tailwindcss/defaultTheme')
 
 module.exports = {
-  experimental: {
-    uniformColorPalette: true,
-    extendedSpacingScale: true,
-    darkModeVariant: true,
-  },
-  future: {
-    purgeLayersByDefault: true,
-  },
-  dark: 'class',
+  darkMode: 'class',
   purge: {
     content: ['./src/**/*.js'],
     preserveHtmlElements: false,
