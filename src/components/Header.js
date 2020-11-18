@@ -18,14 +18,27 @@ export function Header({
         {children}
       </div>
       <div className="flex items-center space-x-5">
-        <select
-          className="text-black"
-          value={tailwindVersion}
-          onChange={(e) => onChangeTailwindVersion(e.target.value)}
-        >
-          <option value="1">v1</option>
-          <option value="2">v2</option>
-        </select>
+        <label className="relative">
+          <span className="sr-only">Tailwind CSS version</span>
+          <select
+            className="appearance-none block bg-transparent pr-6 py-1 text-gray-500 dark:text-gray-400 font-medium text-sm focus:outline-none focus:text-gray-900 dark:focus:text-white transition-colors duration-200"
+            value={tailwindVersion}
+            onChange={(e) => onChangeTailwindVersion(e.target.value)}
+          >
+            <option value="1">v1</option>
+            <option value="2">v2</option>
+          </select>
+          <svg
+            class="w-5 h-5 text-gray-400 dark:text-gray-500 absolute top-1/2 right-0 -mt-2.5 pointer-events-none"
+            fill="currentColor"
+          >
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
+              d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+            ></path>
+          </svg>
+        </label>
         <div className="hidden md:flex items-center space-x-3.5">
           <HeaderButton
             isActive={layout === 'vertical'}
