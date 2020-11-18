@@ -56,6 +56,7 @@ addEventListener('message', async (event) => {
 
   const builtinPlugins = {
     _builderVersion: versions.pluginBuilder,
+    _tailwindVersion: tailwindVersion,
     '@tailwindcss/custom-forms': versions['@tailwindcss/custom-forms'],
     '@tailwindcss/ui': versions['@tailwindcss/ui'],
   }
@@ -71,7 +72,7 @@ addEventListener('message', async (event) => {
       let result
       try {
         const href = builtinPlugins[m]
-          ? '/plugins/' + builtinPlugins._builderVersion + '/' + m + '@' + builtinPlugins[m] + '.js'
+          ? '/plugins/' + builtinPlugins._builderVersion + '/v' + builtinPlugins._tailwindVersion + '/' + m + '@' + builtinPlugins[m] + '.js'
           : 'https://cdn.skypack.dev/' + m + '?min'
         result = await self.importShim(href)
       } catch (error) {
