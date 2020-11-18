@@ -4,7 +4,12 @@ const fs = require('fs').promises
 const versions = require('../preval/versions')
 
 const tailwindVersions = { v1: 'tailwindcss-v1', v2: 'tailwindcss' }
-const plugins = ['@tailwindcss/custom-forms', '@tailwindcss/ui']
+const plugins = [
+  '@tailwindcss/custom-forms',
+  '@tailwindcss/forms',
+  '@tailwindcss/typography',
+  '@tailwindcss/ui',
+]
 
 Object.keys(tailwindVersions).forEach((tailwindVersion) => {
   const tailwindModule = tailwindVersions[tailwindVersion]

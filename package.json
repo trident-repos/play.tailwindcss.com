@@ -10,6 +10,8 @@
   "dependencies": {
     "@ctrl/tinycolor": "^3.1.4",
     "@tailwindcss/custom-forms": "0.2.1",
+    "@tailwindcss/forms": "0.2.1",
+    "@tailwindcss/typography": "0.3.1",
     "@tailwindcss/ui": "0.7.2",
     "@typescript-eslint/eslint-plugin": "2.x",
     "@typescript-eslint/parser": "2.x",

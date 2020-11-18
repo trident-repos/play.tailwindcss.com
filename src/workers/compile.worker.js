@@ -58,6 +58,8 @@ addEventListener('message', async (event) => {
     _builderVersion: versions.pluginBuilder,
     _tailwindVersion: tailwindVersion,
     '@tailwindcss/custom-forms': versions['@tailwindcss/custom-forms'],
+    '@tailwindcss/forms': versions['@tailwindcss/forms'],
+    '@tailwindcss/typography': versions['@tailwindcss/typography'],
     '@tailwindcss/ui': versions['@tailwindcss/ui'],
   }
 
