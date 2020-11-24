@@ -78,6 +78,19 @@ function Pen({
   ])
 
   useEffect(() => {
+    if (dirty) {
+      function handleUnload(e) {
+        e.preventDefault()
+        e.returnValue = ''
+      }
+      window.addEventListener('beforeunload', handleUnload)
+      return () => {
+        window.removeEventListener('beforeunload', handleUnload)
+      }
+    }
+  }, [dirty])
+
+  useEffect(() => {
     setDirty(false)
     setTailwindVersion(toValidTailwindVersion(initialContent.version))
     if (
