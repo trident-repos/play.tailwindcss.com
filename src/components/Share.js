@@ -19,13 +19,11 @@ export function Share({
   })
 
   useEffect(() => {
-    if (initialPath) {
-      setState((current) =>
-        current.state === 'idle' || current.state === 'disabled'
-          ? { state: 'disabled', path: initialPath }
-          : current
-      )
-    }
+    setState((current) =>
+      current.state === 'idle' || current.state === 'disabled'
+        ? { state: 'disabled', path: initialPath }
+        : current
+    )
   }, [initialPath])
 
   useEffect(() => {
