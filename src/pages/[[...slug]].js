@@ -74,6 +74,7 @@ function Pen({
     responsiveSize.width,
     responsiveSize.height,
     responsiveDesignMode,
+    tailwindVersion,
   ])
 
   useEffect(() => {
