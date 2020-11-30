@@ -34,21 +34,27 @@ export function setupEmmet(worker) {
     { triggerCharacters, provideCompletionItems }
   ) => {
     return _registerCompletionItemProvider(lang, {
-      triggerCharacters: [...triggerCharacters, '/'],
+      triggerCharacters: [...triggerCharacters, '/', ...'0123456789'.split('')],
       provideCompletionItems: async (model, position) => {
         const result = provideCompletionItems(model, position)
         if (!result) return result
 
         const suggestions = result.suggestions.map((suggestion) => {
-          if (suggestion.label.includes('/')) {
-            const expandText = expand(
-              suggestion.label.replace(/([0-9]+)\/([0-9]+)/g, '$1__SLASH__$2')
-            ).replace(/__SLASH__/g, '/')
+          const transformed = suggestion.label
+            .replace(/(\d+)\/(\d+)/g, '$1__SLASH__$2')
+            .replace(/(\d+)\.(\d+(?:[^a-z0-9]|$))/gi, '$1__DOT__$2')
+
+          if (/__(SLASH|DOT)__/.test(transformed)) {
+            const expandText = expand(transformed)
+              .replace(/__SLASH__/g, '/')
+              .replace(/__DOT__/g, '.')
+
             suggestion.insertText = expandText
             suggestion.documentation = expandText
               .replace(/([^\\])\$\{\d+\}/g, '$1|')
               .replace(/\$\{\d+:([^\}]+)\}/g, '$1')
           }
+
           return suggestion
         })
 
@@ -63,7 +69,12 @@ export function setupEmmet(worker) {
           const line = model.getValueInRange(range)
 
           if (line.includes('.')) {
-            const partialClass = line.split('.').pop()
+            const partialClass = line
+              .replace(/(\d+)\.($|\d+(?:[^a-z0-9]|$))/gi, '$1__DOT__$2')
+              .split('.')
+              .pop()
+              .replace(/__DOT__/g, '.')
+
             const { result } = await requestResponse(worker, {
               lsp: {
                 type: 'completeString',
