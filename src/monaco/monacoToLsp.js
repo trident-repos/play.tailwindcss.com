@@ -201,7 +201,7 @@ function asCommand(item) {
   return undefined
 }
 
-function asRange(range) {
+export function asRange(range) {
   if (range === undefined) {
     return undefined
   }

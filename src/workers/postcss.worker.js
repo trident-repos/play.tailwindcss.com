@@ -5,6 +5,7 @@ import {
   doValidate,
   doHover,
   getDocumentColors,
+  completionsFromClassList,
 } from 'tailwindcss-language-service'
 import {
   asCompletionResult as asMonacoCompletionResult,
@@ -13,7 +14,10 @@ import {
   asHover as asMonacoHover,
   asRange as asMonacoRange,
 } from '../monaco/lspToMonaco'
-import { asCompletionItem as asLspCompletionItem } from '../monaco/monacoToLsp'
+import {
+  asCompletionItem as asLspCompletionItem,
+  asRange as asLspRange,
+} from '../monaco/monacoToLsp'
 import CompileWorker from 'worker-loader?publicPath=/_next/&filename=static/chunks/[name].[hash].js&chunkFilename=static/chunks/[id].[contenthash].worker.js!./compile.worker.js'
 import { createWorkerQueue } from '../utils/workers'
 import './subworkers'
@@ -51,19 +55,32 @@ addEventListener('message', async (event) => {
           []
         )
         break
+      case 'completeString':
+        result = fallback(() =>
+          asMonacoCompletionResult(
+            completionsFromClassList(
+              state,
+              document.getText(),
+              asLspRange(event.data.lsp.range)
+            )
+          )
+        )
+        break
       case 'resolveCompletionItem':
         result = asMonacoCompletionItem(
-          resolveCompletionItem(state, asLspCompletionItem(event.data.lsp.item))
+          await resolveCompletionItem(
+            state,
+            asLspCompletionItem(event.data.lsp.item)
+          )
         )
         break
       case 'hover':
-        const hover = doHover(state, document, {
+        const hover = await doHover(state, document, {
           line: event.data.lsp.position.lineNumber - 1,
           character: event.data.lsp.position.column - 1,
         })
         if (hover && hover.contents.language === 'css') {
           hover.contents.language = 'tailwindcss'
-          hover.contents.value = hover.contents.value.replace(/\t/g, '  ')
         }
         result = fallback(() => asMonacoHover(hover))
         break

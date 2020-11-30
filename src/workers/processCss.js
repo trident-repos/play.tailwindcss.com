@@ -91,6 +91,7 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
     userLanguages: {},
     capabilities: {},
     globalSettings: {
+      tabSize: 2,
       validate: true,
       lint: {
         cssConflict: 'warning',

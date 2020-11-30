@@ -3,11 +3,14 @@ import { supplementMarkers } from './supplementMarkers'
 import { renderColorDecorators } from './renderColorDecorators'
 import { requestResponse } from '../utils/workers'
 import { debounce } from 'debounce'
+import { setupEmmet } from './emmet'
 
-const HTML_URI = 'file:///HTML'
+export const HTML_URI = 'file:///HTML'
 
 export function setupHtmlMode(content, onChange, worker, getEditor) {
   const disposables = []
+
+  disposables.push(setupEmmet(worker.current))
 
   disposables.push(
     monaco.languages.registerCompletionItemProvider('html', {

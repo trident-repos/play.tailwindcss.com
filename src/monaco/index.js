@@ -1,5 +1,4 @@
 import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
-import { emmetHTML, emmetCSS } from 'emmet-monaco-es'
 import PrettierWorker from 'worker-loader?publicPath=/_next/&filename=static/chunks/[name].[hash].js&chunkFilename=static/chunks/[id].[contenthash].worker.js!../workers/prettier.worker.js'
 import { createWorkerQueue } from '../utils/workers'
 import { setupHtmlMode } from './html'
@@ -79,9 +78,6 @@ export function createMonacoEditor({
     theme: getTheme() === 'dark' ? 'tw-dark' : 'vs',
   })
   disposables.push(editor)
-
-  const emmet = emmetHTML(window.moncaco)
-  disposables.push(emmet)
 
   setupKeybindings(editor)
 
