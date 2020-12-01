@@ -65,7 +65,7 @@ module.exports = () => {
           <div class="pt-6 text-base leading-6 font-bold sm:text-lg sm:leading-7">
             <p>Want to dig deeper into Tailwind?</p>
             <p>
-              <a href="https://tailwindcss.com" class="text-cyan-600 hover:text-cyan-700"> Read the docs &rarr; </a>
+              <a href="https://tailwindcss.com/docs" class="text-cyan-600 hover:text-cyan-700"> Read the docs &rarr; </a>
             </p>
           </div>
         </div>
