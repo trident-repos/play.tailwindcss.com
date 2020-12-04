@@ -378,6 +378,7 @@ export const Preview = forwardRef(
                     window.open(el.href, '_blank');
                   });
                   </script>
+                  <script src="/js/alpinejs-2.7.3.js"></script>
                 </html>
               `}
             />
