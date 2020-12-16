@@ -76,6 +76,7 @@ export function createMonacoEditor({
     lineHeight: 21,
     minimap: { enabled: false },
     theme: getTheme() === 'dark' ? 'tw-dark' : 'vs',
+    fixedOverflowWidgets: true,
   })
   disposables.push(editor)
 
