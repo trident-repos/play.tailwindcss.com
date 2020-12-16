@@ -20,6 +20,7 @@ import { sizeToObject } from '../utils/size'
 import { getLayoutQueryString } from '../utils/getLayoutQueryString'
 import { get } from '../utils/database'
 import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
+import Head from 'next/head'
 
 const HEADER_HEIGHT = 60 - 1
 const TAB_BAR_HEIGHT = 40
@@ -283,6 +284,32 @@ function Pen({
 
   return (
     <>
+      <Head>
+        <meta
+          property="og:url"
+          content={`https://play.tailwindcss.com${
+            initialContent.ID ? `/${initialContent.ID}` : ''
+          }`}
+        />
+        <meta
+          name="twitter:card"
+          content={initialContent.ID ? 'summary' : 'summary_large_image'}
+        />
+        <meta
+          name="twitter:image"
+          content={
+            initialContent.ID
+              ? 'https://play.tailwindcss.com/social-square.jpg'
+              : 'https://play.tailwindcss.com/social-card.jpg'
+          }
+        />
+        {!initialContent.ID && (
+          <meta
+            property="og:image"
+            content="https://play.tailwindcss.com/social-card.jpg"
+          />
+        )}
+      </Head>
       <Header
         layout={size.layout}
         onChangeLayout={(layout) => setSize((size) => ({ ...size, layout }))}
