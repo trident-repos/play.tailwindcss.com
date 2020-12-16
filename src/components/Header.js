@@ -12,12 +12,12 @@ export function Header({
   children,
 }) {
   return (
-    <header className="relative z-10 flex-none py-3 px-5 sm:px-6 flex items-center space-x-4">
+    <header className="relative z-10 flex-none py-3 pl-5 pr-3 sm:pl-6 sm:pr-4 md:pr-3.5 lg:px-6 flex items-center space-x-4">
       <div className="flex-auto flex items-center min-w-0 space-x-5">
         <Logo className="flex-none text-black dark:text-white" />
         {children}
       </div>
-      <div className="flex items-center space-x-5">
+      <div className="flex items-center space-x-3 lg:space-x-5">
         <label className="relative">
           <span className="sr-only">Tailwind CSS version</span>
           <select
@@ -25,8 +25,8 @@ export function Header({
             value={tailwindVersion}
             onChange={(e) => onChangeTailwindVersion(e.target.value)}
           >
-            <option value="1">v1</option>
-            <option value="2">v2</option>
+            <option value="1">v1.9.6</option>
+            <option value="2">v2.0.2</option>
           </select>
           <svg
             className="w-5 h-5 text-gray-400 dark:text-gray-500 absolute top-1/2 right-0 -mt-2.5 pointer-events-none"
@@ -39,7 +39,7 @@ export function Header({
             ></path>
           </svg>
         </label>
-        <div className="hidden md:flex items-center space-x-3.5">
+        <div className="hidden md:flex items-center space-x-1 lg:space-x-3.5">
           <HeaderButton
             isActive={layout === 'vertical'}
             label="Switch to vertical split layout"

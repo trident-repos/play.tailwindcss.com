@@ -100,7 +100,7 @@ export function Share({
       <button
         type="button"
         className={clsx(
-          'relative flex-none rounded-md border border-gray-200 text-sm font-medium leading-5 py-1.5 px-4 focus:border-turquoise-400 focus:outline-none focus:shadow-outline dark:bg-gray-800 dark:border-transparent dark:focus:bg-gray-700 dark:focus:border-turquoise-500',
+          'relative flex-none rounded-md border border-gray-200 text-sm font-medium leading-5 py-1.5 px-2 lg:px-4 focus:border-turquoise-400 focus:outline-none focus:shadow-outline dark:bg-gray-800 dark:border-transparent dark:focus:bg-gray-700 dark:focus:border-turquoise-500',
           {
             'opacity-50': state === 'disabled',
             'cursor-auto':
