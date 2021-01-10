@@ -125,7 +125,12 @@ module.exports = withTM({
     }
 
     config.module.rules.push({
-      test: /language\/css\/cssWorker\.js$/,
+      test: {
+        or: [
+          require.resolve('monaco-editor/esm/vs/language/css/cssWorker.js'),
+          require.resolve('monaco-editor/dev/vs/language/css/cssWorker.js'),
+        ],
+      },
       use: [
         createLoader(function (source) {
           return source.replace(
@@ -137,12 +142,12 @@ module.exports = withTM({
     })
 
     config.module.rules.push({
-      test: /tailwindcss-v1\/lib\/plugins\/preflight\.js$/,
+      test: require.resolve('tailwindcss-v1/lib/plugins/preflight.js'),
       use: [createReadFileReplaceLoader(1)],
     })
 
     config.module.rules.push({
-      test: /tailwindcss\/lib\/plugins\/preflight\.js$/,
+      test: require.resolve('tailwindcss/lib/plugins/preflight.js'),
       use: [createReadFileReplaceLoader(2)],
     })
 
