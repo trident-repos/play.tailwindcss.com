@@ -4,6 +4,7 @@ export function put(item) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         uuid: item.ID,
@@ -14,6 +15,7 @@ export function put(item) {
       }),
     })
       .then((response) => {
+        if (!response.ok) throw response
         return response.json()
       })
       .then(({ uuid }) => {

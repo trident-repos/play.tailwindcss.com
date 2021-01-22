@@ -13,9 +13,10 @@ export function Share({
   onShareComplete,
   tailwindVersion,
 }) {
-  const [{ state, path }, setState] = useState({
+  const [{ state, path, errorText }, setState] = useState({
     state: 'disabled',
     path: initialPath,
+    errorText: undefined,
   })
 
   useEffect(() => {
@@ -44,7 +45,7 @@ export function Share({
           }),
         })
         .then((res) => {
-          if (!res.ok) throw Error(res)
+          if (!res.ok) throw res
           return res
         })
         .then((res) => res.json())
@@ -70,9 +71,37 @@ export function Share({
               })
           }
         })
-        .catch(() => {
-          if (current) {
-            setState({ state: 'error' })
+        .catch((error) => {
+          if (!current) return
+
+          const defaultErrorText = 'Whoops! Something went wrong.'
+
+          if (error instanceof window.Response) {
+            error.json().then((response) => {
+              if (!current) return
+              if (
+                typeof response.errors === 'object' &&
+                response.errors !== null &&
+                !Array.isArray(response.errors)
+              ) {
+                setState({
+                  state: 'error',
+                  errorText:
+                    response.errors[Object.keys(response.errors)[0]][0] ||
+                    defaultErrorText,
+                })
+              } else {
+                setState({
+                  state: 'error',
+                  errorText: defaultErrorText,
+                })
+              }
+            })
+          } else {
+            setState({
+              state: 'error',
+              errorText: defaultErrorText,
+            })
           }
         })
     } else if (state === 'copied') {
@@ -157,8 +186,12 @@ export function Share({
         </span>
       </button>
       {state === 'error' && (
-        <p className="text-sm leading-5 font-medium text-gray-500 dark:text-gray-400 truncate">
-          Whoops! Something went wrong. Please try again.
+        <p
+          className="text-sm leading-5 font-medium text-gray-500 dark:text-gray-400 truncate"
+          title={errorText}
+        >
+          <span className="sr-only">Error: </span>
+          {errorText}
         </p>
       )}
       {(state === 'copied' || state === 'disabled') && path && (
