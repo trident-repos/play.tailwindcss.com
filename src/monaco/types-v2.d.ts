@@ -190,7 +190,10 @@ type VariantsAPI = {
   after: (toInsert: string[], variant?: string, existingPluginVariants?: string[]) => string[];
   without: (toRemove: string[], existingPluginVariants?: string[]) => string[];
 }
-type VariantsConfig = string[] | Record<string, string[] | ((api: VariantsAPI) => string[])>;
+type VariantsConfig =
+  | string[]
+  | Record<string, string[] | ((api: VariantsAPI) => string[])>
+  | { extend: Record<string, string[]> };
 
 type CorePluginsConfig = string[] | Record<string, boolean>;
 
