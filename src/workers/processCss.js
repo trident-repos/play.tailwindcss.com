@@ -37,9 +37,13 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
 
   if (!applyComplexClasses.default.__patched) {
     let _applyComplexClasses = applyComplexClasses.default
-    applyComplexClasses.default = (...args) => {
-      let fn = _applyComplexClasses(...args)
-      return (css) => {
+    applyComplexClasses.default = (config, ...args) => {
+      let configClone = klona(config)
+      configClone.separator = separator
+
+      let fn = _applyComplexClasses(configClone, ...args)
+
+      return async (css) => {
         css.walkRules((rule) => {
           const newSelector = rule.selector.replace(
             /__TWSEP__(.*?)__TWSEP__/g,
@@ -54,7 +58,9 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
             rule.selector = newSelector
           }
         })
-        fn(css)
+
+        await fn(css)
+
         css.walkComments((comment) => {
           if (comment.text.startsWith('__ORIGINAL_SELECTOR__:')) {
             comment.next().selector = comment.text.replace(
@@ -64,6 +70,8 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
             comment.remove()
           }
         })
+
+        return css
       }
     }
     applyComplexClasses.default.__patched = true
