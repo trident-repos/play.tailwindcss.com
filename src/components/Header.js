@@ -25,10 +25,10 @@ export function Header({
             value={tailwindVersion}
             onChange={(e) => onChangeTailwindVersion(e.target.value)}
           >
-            <option value="1" className="text-revert">
+            <option value="1" className="text-initial">
               v1.9.6
             </option>
-            <option value="2" className="text-revert">
+            <option value="2" className="text-initial">
               v2.0.2
             </option>
           </select>
