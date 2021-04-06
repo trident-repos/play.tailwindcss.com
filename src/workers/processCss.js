@@ -29,6 +29,7 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
   const separator = config.separator || ':'
   config.separator = `__TWSEP__${separator}__TWSEP__`
   config.purge = false
+  delete config.mode
 
   const applyComplexClasses =
     tailwindVersion === '1'
