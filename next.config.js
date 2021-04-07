@@ -160,6 +160,13 @@ module.exports = withTM({
       ],
     })
 
+    config.module.rules.push({
+      resourceQuery: /version/,
+      use: createLoader(function (source) {
+        return `{ "version": "${JSON.parse(source).version}" }`
+      }),
+    })
+
     config.output.globalObject = 'self'
 
     return config
