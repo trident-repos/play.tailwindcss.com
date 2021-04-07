@@ -167,6 +167,28 @@ module.exports = withTM({
       }),
     })
 
+    // https://github.com/tailwindlabs/tailwindcss/pull/4005
+    config.module.rules.push({
+      test: require.resolve('tailwindcss/jit/pluginUtils.js'),
+      use: createLoader(function (source) {
+        return source.replace(
+          `return transform(value).replace(/(?<=^calc\\(.+?)(?<![-+*/(])([-+*/])/g, ' $1 ')`,
+          `
+            value = transform(value)
+
+            if (value.startsWith('calc(')) {
+              // add spaces around operators inside calc() that do not follow an operator or (
+              return value.replace(/[-+*/(]+/g, (match) =>
+                match[0] === '(' ? match : [' ', match[0], ' ', ...match.slice(1)].join('')
+              )
+            }
+
+            return value
+          `
+        )
+      }),
+    })
+
     config.output.globalObject = 'self'
 
     return config
