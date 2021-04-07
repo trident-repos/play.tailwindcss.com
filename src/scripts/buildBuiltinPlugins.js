@@ -1,7 +1,7 @@
 const { build } = require('esbuild')
 const path = require('path')
 const fs = require('fs').promises
-const versions = require('../preval/versions')
+const { PLUGIN_BUILDER_VERSION } = require('../constants')
 
 const tailwindVersions = { v1: 'tailwindcss-v1', v2: 'tailwindcss' }
 const plugins = [
@@ -52,7 +52,7 @@ Object.keys(tailwindVersions).forEach((tailwindVersion) => {
       path.resolve(
         __dirname,
         '../../public/plugins',
-        versions.pluginBuilder,
+        PLUGIN_BUILDER_VERSION,
         tailwindVersion
       ),
       {
@@ -66,7 +66,7 @@ Object.keys(tailwindVersions).forEach((tailwindVersion) => {
         path.resolve(
           __dirname,
           '../../public/plugins',
-          versions.pluginBuilder,
+          PLUGIN_BUILDER_VERSION,
           tailwindVersion,
           ...parts.slice(0, parts.length - 1)
         ),
@@ -82,7 +82,7 @@ Object.keys(tailwindVersions).forEach((tailwindVersion) => {
       path.resolve(
         __dirname,
         '../../public/plugins',
-        versions.pluginBuilder,
+        PLUGIN_BUILDER_VERSION,
         tailwindVersion,
         `${plugin}@${pkg.version}.js`
       ),

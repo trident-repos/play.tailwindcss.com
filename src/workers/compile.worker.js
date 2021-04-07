@@ -1,6 +1,6 @@
-import versions from '../preval/versions'
 import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
 import { processCss } from './processCss'
+import { PLUGIN_BUILDER_VERSION } from '../constants'
 
 let current
 
@@ -55,12 +55,15 @@ addEventListener('message', async (event) => {
   }
 
   const builtinPlugins = {
-    _builderVersion: versions.pluginBuilder,
+    _builderVersion: PLUGIN_BUILDER_VERSION,
     _tailwindVersion: tailwindVersion,
-    '@tailwindcss/custom-forms': versions['@tailwindcss/custom-forms'],
-    '@tailwindcss/forms': versions['@tailwindcss/forms'],
-    '@tailwindcss/typography': versions['@tailwindcss/typography'],
-    '@tailwindcss/ui': versions['@tailwindcss/ui'],
+    '@tailwindcss/custom-forms': require('@tailwindcss/custom-forms/package.json?version')
+      .version,
+    '@tailwindcss/forms': require('@tailwindcss/forms/package.json?version')
+      .version,
+    '@tailwindcss/typography': require('@tailwindcss/typography/package.json?version')
+      .version,
+    '@tailwindcss/ui': require('@tailwindcss/ui/package.json?version').version,
   }
 
   const before = `(async function(module){

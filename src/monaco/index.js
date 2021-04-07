@@ -5,7 +5,6 @@ import { setupHtmlMode } from './html'
 import { setupCssMode } from './css'
 import { setupJavaScriptMode } from './javascript'
 import { getTheme } from '../utils/theme'
-import versions from '../preval/versions'
 
 export function createMonacoEditor({
   container,
@@ -19,7 +18,7 @@ export function createMonacoEditor({
   let shouldTriggerOnChange = true
 
   window.MonacoEnvironment.getWorkerUrl = (_moduleId, label) => {
-    const v = `?v=${versions['monaco-editor']}`
+    const v = `?v=${require('monaco-editor/package.json?version').version}`
     if (label === 'css' || label === 'tailwindcss')
       return `_next/static/chunks/css.worker.js${v}`
     if (label === 'html') return `_next/static/chunks/html.worker.js${v}`

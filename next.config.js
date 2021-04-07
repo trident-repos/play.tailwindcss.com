@@ -151,6 +151,22 @@ module.exports = withTM({
       use: [createReadFileReplaceLoader(2)],
     })
 
+    config.module.rules.push({
+      test: require.resolve('tailwindcss/jit/index.js'),
+      use: [
+        createLoader(function (_source) {
+          return ''
+        }),
+      ],
+    })
+
+    config.module.rules.push({
+      resourceQuery: /version/,
+      use: createLoader(function (source) {
+        return `{ "version": "${JSON.parse(source).version}" }`
+      }),
+    })
+
     config.output.globalObject = 'self'
 
     return config

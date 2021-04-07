@@ -1,5 +1,4 @@
 import autoprefixer from 'autoprefixer'
-import versions from '../preval/versions'
 import { klona } from 'klona/full'
 import extractClasses from './extractClasses'
 import { removeFunctions } from '../utils/object'
@@ -29,6 +28,7 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
   const separator = config.separator || ':'
   config.separator = `__TWSEP__${separator}__TWSEP__`
   config.purge = false
+  delete config.mode
 
   const applyComplexClasses =
     tailwindVersion === '1'
@@ -94,7 +94,9 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
   state.variants = getVariants({ config: state.config, postcss })
   removeFunctions(state.config)
   state.version =
-    tailwindVersion === '1' ? versions['tailwindcss-v1'] : versions.tailwindcss
+    tailwindVersion === '1'
+      ? require('tailwindcss-v1/package.json?version').version
+      : require('tailwindcss/package.json?version').version
   state.editor = {
     userLanguages: {},
     capabilities: {},

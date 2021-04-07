@@ -168,6 +168,27 @@ type ThemeConfig = Partial<{
     Record<string, Record<string, KeyValuePair | string>>
   >;
 
+  /** Filters */
+  blur: ResolvableTo<Record<string, string | string[]>>;
+  brightness: ResolvableTo<Record<string, string | string[]>>;
+  contrast: ResolvableTo<Record<string, string | string[]>>;
+  dropShadow: ResolvableTo<Record<string, string | string[]>>;
+  grayscale: ResolvableTo<Record<string, string | string[]>>;
+  hueRotate: ResolvableTo<Record<string, string | string[]>>;
+  invert: ResolvableTo<Record<string, string | string[]>>;
+  saturate: ResolvableTo<Record<string, string | string[]>>;
+  sepia: ResolvableTo<Record<string, string | string[]>>;
+  backdropFilter: ResolvableTo<Record<string, string | string[]>>;
+  backdropBlur: ResolvableTo<Record<string, string | string[]>>;
+  backdropBrightness: ResolvableTo<Record<string, string | string[]>>;
+  backdropContrast: ResolvableTo<Record<string, string | string[]>>;
+  backdropGrayscale: ResolvableTo<Record<string, string | string[]>>;
+  backdropHueRotate: ResolvableTo<Record<string, string | string[]>>;
+  backdropInvert: ResolvableTo<Record<string, string | string[]>>;
+  backdropOpacity: ResolvableTo<Record<string, string | string[]>>;
+  backdropSaturate: ResolvableTo<Record<string, string | string[]>>;
+  backdropSepia: ResolvableTo<Record<string, string | string[]>>;
+
   /** Components */
   container: Partial<{
     screens:
