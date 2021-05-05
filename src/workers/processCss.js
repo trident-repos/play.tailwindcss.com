@@ -19,16 +19,31 @@ const deps = {
   ],
 }
 
-export async function processCss(configInput, cssInput, tailwindVersion = '2') {
+export async function processCss(
+  configInput,
+  htmlInput,
+  cssInput,
+  tailwindVersion = '2',
+  skipIntelliSense = false
+) {
+  let jit = false
   const config = klona(configInput)
   const [tailwindcss, postcss, resolveConfig, featureFlags] = (
     await Promise.all(deps[tailwindVersion].map((x) => x()))
   ).map((x) => x.default || x)
 
+  self['/htmlInput'] = htmlInput
+
   const separator = config.separator || ':'
+
   config.separator = `__TWSEP__${separator}__TWSEP__`
-  config.purge = false
-  delete config.mode
+  config.purge = ['/htmlInput']
+
+  if (config.mode === 'jit') {
+    config.variants = []
+    delete config.mode
+    jit = true
+  }
 
   const applyComplexClasses =
     tailwindVersion === '1'
@@ -77,43 +92,72 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
     applyComplexClasses.default.__patched = true
   }
 
-  const { css, root } = await postcss([
-    tailwindcss(config),
-    autoprefixer(),
-  ]).process(cssInput, {
-    from: undefined,
-  })
+  let css
+  let lspRoot
 
-  const state = {}
+  if (!jit) {
+    let result = await postcss([tailwindcss(config), autoprefixer()]).process(
+      cssInput,
+      {
+        from: undefined,
+      }
+    )
+    css = result.css
+    lspRoot = result.root
+  } else {
+    css = (
+      await postcss([
+        tailwindcss({ ...config, mode: 'jit', separator }),
+        autoprefixer(),
+      ]).process(cssInput, {
+        from: undefined,
+      })
+    ).css
+
+    if (!skipIntelliSense) {
+      lspRoot = (
+        await postcss([tailwindcss(config), autoprefixer()]).process(cssInput, {
+          from: undefined,
+        })
+      ).root
+    }
+  }
+
+  let state
 
   config.separator = separator
-  state.enabled = true
-  state.classNames = await extractClasses(root)
-  state.separator = separator
-  state.config = resolveConfig(klona(configInput))
-  state.variants = getVariants({ config: state.config, postcss })
-  removeFunctions(state.config)
-  state.version =
-    tailwindVersion === '1'
-      ? require('tailwindcss-v1/package.json?version').version
-      : require('tailwindcss/package.json?version').version
-  state.editor = {
-    userLanguages: {},
-    capabilities: {},
-    globalSettings: {
-      tabSize: 2,
-      validate: true,
-      lint: {
-        cssConflict: 'warning',
-        invalidApply: 'error',
-        invalidScreen: 'error',
-        invalidVariant: 'error',
-        invalidConfigPath: 'error',
-        invalidTailwindDirective: 'error',
+
+  if (lspRoot) {
+    state = {}
+    state.enabled = true
+    state.classNames = await extractClasses(lspRoot)
+    state.separator = separator
+    state.config = resolveConfig(klona(configInput))
+    state.variants = getVariants({ config: state.config, postcss })
+    removeFunctions(state.config)
+    state.version =
+      tailwindVersion === '1'
+        ? require('tailwindcss-v1/package.json?version').version
+        : require('tailwindcss/package.json?version').version
+    state.editor = {
+      userLanguages: {},
+      capabilities: {},
+      globalSettings: {
+        tabSize: 2,
+        validate: true,
+        lint: {
+          cssConflict: 'warning',
+          invalidApply: 'error',
+          invalidScreen: 'error',
+          invalidVariant: 'error',
+          invalidConfigPath: 'error',
+          invalidTailwindDirective: 'error',
+        },
       },
-    },
+    }
+    state.featureFlags = featureFlags
   }
-  state.featureFlags = featureFlags
+
   const escapedSeparator = separator.replace(/./g, (m) =>
     /[a-z0-9-_]/i.test(m) ? m : `\\${m}`
   )
@@ -121,5 +165,7 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
   return {
     state,
     css: css.replace(/__TWSEP__.*?__TWSEP__/g, escapedSeparator),
+    jit,
+    ...(jit ? { html: htmlInput } : {}),
   }
 }

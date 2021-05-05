@@ -4,6 +4,7 @@ import { PLUGIN_BUILDER_VERSION } from '../constants'
 
 let current
 
+let lastHtml
 let lastCss
 let lastConfig
 let tailwindVersion = '2'
@@ -14,12 +15,14 @@ addEventListener('message', async (event) => {
     return
   }
 
+  const html = event.data._recompile ? lastHtml : event.data.html
   const css = event.data._recompile ? lastCss : event.data.css
   const config = event.data._recompile ? lastConfig : event.data.config
   if ('tailwindVersion' in event.data) {
     tailwindVersion = toValidTailwindVersion(event.data.tailwindVersion)
   }
 
+  lastHtml = html
   lastCss = css
   lastConfig = config
 
@@ -141,12 +144,19 @@ addEventListener('message', async (event) => {
   }
 
   try {
-    const { css: compiledCss, state } = await processCss(
+    const {
+      css: compiledCss,
+      html: compiledHtml,
+      state,
+      jit,
+    } = await processCss(
       mod.exports,
+      html,
       css,
-      tailwindVersion
+      tailwindVersion,
+      event.data.skipIntelliSense
     )
-    respond({ state, css: compiledCss })
+    respond({ state, css: compiledCss, html: compiledHtml, jit })
   } catch (error) {
     console.log(error)
     if (error.toString().startsWith('CssSyntaxError')) {

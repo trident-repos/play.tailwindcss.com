@@ -9,11 +9,13 @@ const externals = {
   resolve: 'self.resolve',
   'fs.realpath': 'self.fsrealpath',
   purgecss: 'self.purgecss',
+  chokidar: 'self.chokidar',
   'vscode-emmet-helper-bundled': 'null',
 }
 
 const moduleOverrides = {
   colorette: path.resolve(__dirname, 'src/modules/colorette.js'),
+  fs: path.resolve(__dirname, 'src/modules/fs.js'),
 }
 
 function getExternal(context, request, callback) {
@@ -85,8 +87,7 @@ module.exports = withTM({
       },
     ]
   },
-  webpack: (config, { isServer }) => {
-    config.node.fs = 'empty'
+  webpack: (config, { isServer, webpack }) => {
     config.resolve.alias = { ...config.resolve.alias, ...moduleOverrides }
 
     config.module.rules
@@ -151,11 +152,35 @@ module.exports = withTM({
       use: [createReadFileReplaceLoader(2)],
     })
 
+    config.plugins.push(
+      new webpack.DefinePlugin({
+        'process.env.TAILWIND_MODE': JSON.stringify('build'),
+        'process.env.TAILWIND_DISABLE_TOUCH': true,
+      })
+    )
+
+    // there's some node-specific stuff in parse-glob
+    // we don't use globs though so this can be overridden
     config.module.rules.push({
-      test: require.resolve('tailwindcss/jit/index.js'),
+      test: require.resolve('parse-glob'),
       use: [
         createLoader(function (_source) {
-          return ''
+          return `module.exports = () => ({
+            is: { glob: false },
+          })`
+        }),
+      ],
+    })
+
+    // avoids node-specific stuff
+    // this essentially makes fast-glob return whatever it is passed
+    config.module.rules.push({
+      test: require.resolve('fast-glob'),
+      use: [
+        createLoader(function (_source) {
+          return `module.exports = {
+            sync: (patterns) => [].concat(patterns)
+          }`
         }),
       ],
     })

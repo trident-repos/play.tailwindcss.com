@@ -315,16 +315,16 @@ export const Preview = forwardRef(
                     var hasCss = false
                     var visible = false
                     window.addEventListener('message', (e) => {
-                      if ('clear' in e.data) {
+                      if (typeof e.data.clear !== 'undefined') {
                         setHtml()
                         setCss()
                         checkVisibility()
                         return
                       }
-                      if ('css' in e.data) {
+                      if (typeof e.data.css !== 'undefined') {
                         setCss(e.data.css)
                       }
-                      if ('html' in e.data) {
+                      if (typeof e.data.html !== 'undefined') {
                         setHtml(e.data.html)
                       }
                       checkVisibility()

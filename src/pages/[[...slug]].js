@@ -66,6 +66,7 @@ function Pen({
   const [tailwindVersion, setTailwindVersion] = useState(
     toValidTailwindVersion(initialContent.version)
   )
+  const [jit, setJit] = useState(false)
 
   useEffect(() => {
     setDirty(true)
@@ -107,6 +108,7 @@ function Pen({
       )
       inject({ html: initialContent.html })
       compileNow({
+        html: initialContent.html,
         css: initialContent.css,
         config: initialContent.config,
         tailwindVersion: toValidTailwindVersion(initialContent.version),
@@ -127,7 +129,7 @@ function Pen({
     }
     cancelSetError()
     setIsLoading(true)
-    const { css, canceled, error } = await requestResponse(
+    const { css, html, jit, canceled, error } = await requestResponse(
       worker.current,
       content
     )
@@ -140,8 +142,9 @@ function Pen({
       return
     }
     setErrorImmediate()
-    if (css) {
-      previewRef.current.contentWindow.postMessage({ css }, '*')
+    setJit(Boolean(jit))
+    if (css || html) {
+      inject({ css, html })
     }
   }
 
@@ -150,13 +153,18 @@ function Pen({
   const onChange = useCallback(
     (document, content) => {
       setDirty(true)
-      if (document === 'html') {
+      if (document === 'html' && !jit) {
         inject({ html: content.html })
       } else {
-        compile({ css: content.css, config: content.config })
+        compile({
+          html: content.html,
+          css: content.css,
+          config: content.config,
+          skipIntelliSense: document === 'html',
+        })
       }
     },
-    [inject, compile]
+    [inject, compile, jit]
   )
 
   useEffect(() => {
@@ -404,6 +412,7 @@ function Pen({
                     compileNow({
                       css: initialContent.css,
                       config: initialContent.config,
+                      html: initialContent.html,
                       tailwindVersion: initialContent.version,
                     })
                   }}

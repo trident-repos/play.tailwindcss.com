@@ -77,6 +77,7 @@ module.exports = () => {
   const config = `const colors = require('tailwindcss/colors')
 
 module.exports = {
+  mode: 'jit',
   theme: {
     extend: {
       colors: {

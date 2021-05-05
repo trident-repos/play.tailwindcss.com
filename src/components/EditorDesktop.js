@@ -32,6 +32,10 @@ export default function Editor({
     }
   }, [])
 
+  useEffect(() => {
+    editorRef.current.setOnChange(onChange)
+  }, [onChange])
+
   const initial = useRef(true)
   useEffect(() => {
     if (initial.current) {

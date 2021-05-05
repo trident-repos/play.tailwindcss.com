@@ -107,14 +107,22 @@ addEventListener('message', async (event) => {
 
   if (
     (typeof event.data.css !== 'undefined' &&
-      typeof event.data.config !== 'undefined') ||
+      typeof event.data.config !== 'undefined' &&
+      typeof event.data.html !== 'undefined') ||
     event.data._recompile
   ) {
     const result = await compileWorker.emit(event.data)
 
     if (!result.error && !result.canceled) {
-      state = result.state
-      postMessage({ _id: event.data._id, css: result.css })
+      if (result.state) {
+        state = result.state
+      }
+      postMessage({
+        _id: event.data._id,
+        css: result.css,
+        html: result.html,
+        jit: result.jit,
+      })
     } else {
       postMessage({ ...result, _id: event.data._id })
     }
