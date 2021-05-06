@@ -4,6 +4,8 @@ import extractClasses from './extractClasses'
 import { removeFunctions } from '../utils/object'
 import { getVariants } from '../utils/getVariants'
 
+const VIRTUAL_HTML_FILENAME = '/htmlInput'
+
 const deps = {
   1: [
     () => import('tailwindcss-v1'),
@@ -32,17 +34,18 @@ export async function processCss(
     await Promise.all(deps[tailwindVersion].map((x) => x()))
   ).map((x) => x.default || x)
 
-  self['/htmlInput'] = htmlInput
+  self[VIRTUAL_HTML_FILENAME] = htmlInput
 
   const separator = config.separator || ':'
 
-  config.separator = `__TWSEP__${separator}__TWSEP__`
-  config.purge = ['/htmlInput']
+  config.purge = false
 
   if (config.mode === 'jit') {
     config.variants = []
     delete config.mode
     jit = true
+  } else {
+    config.separator = `__TWSEP__${separator}__TWSEP__`
   }
 
   const applyComplexClasses =
@@ -107,7 +110,12 @@ export async function processCss(
   } else {
     css = (
       await postcss([
-        tailwindcss({ ...config, mode: 'jit', separator }),
+        tailwindcss({
+          ...config,
+          mode: 'jit',
+          separator,
+          purge: [VIRTUAL_HTML_FILENAME],
+        }),
         autoprefixer(),
       ]).process(cssInput, {
         from: undefined,
