@@ -108,26 +108,69 @@ export async function processCss(
     css = result.css
     lspRoot = result.root
   } else {
-    css = (
-      await postcss([
-        tailwindcss({
-          ...config,
-          mode: 'jit',
-          separator,
-          purge: [VIRTUAL_HTML_FILENAME],
-        }),
-        autoprefixer(),
-      ]).process(cssInput, {
-        from: undefined,
-      })
-    ).css
+    let layers = new Set()
+    let result = await postcss([
+      (root) => {
+        root.walkAtRules('tailwind', (rule) => {
+          if (
+            ['base', 'components', 'utilities', 'screens'].includes(rule.params)
+          ) {
+            rule.before(postcss.comment({ text: '__start_layer__' }))
+            rule.after(postcss.comment({ text: '__end_layer__' }))
+            layers.add(rule.params)
+          }
+        })
+        if (!layers.has('screens')) {
+          root.append([
+            postcss.comment({ text: '__start_layer__' }),
+            postcss.atRule({ name: 'tailwind', params: 'screens' }),
+            postcss.comment({ text: '__end_layer__' }),
+          ])
+        }
+      },
+      tailwindcss({
+        ...config,
+        mode: 'jit',
+        separator,
+        purge: [VIRTUAL_HTML_FILENAME],
+      }),
+      autoprefixer(),
+    ]).process(cssInput, {
+      from: undefined,
+    })
+
+    css = result.css
 
     if (!skipIntelliSense) {
-      lspRoot = (
-        await postcss([tailwindcss(config), autoprefixer()]).process(cssInput, {
-          from: undefined,
-        })
+      let layersRoot = (
+        await postcss([tailwindcss(config), autoprefixer()]).process(
+          Array.from(layers)
+            .map((layer) => `@tailwind ${layer};`)
+            .join('\n'),
+          {
+            from: undefined,
+          }
+        )
       ).root
+
+      let insideLayer = false
+      result.root.walk((node) => {
+        if (node.type === 'comment') {
+          if (node.text === '__start_layer__') {
+            insideLayer = true
+            node.remove()
+          } else if (node.text === '__end_layer__') {
+            insideLayer = false
+            node.remove()
+          }
+        } else if (insideLayer) {
+          node.remove()
+        }
+      })
+
+      result.root.prepend(layersRoot.nodes)
+
+      lspRoot = result.root
     }
   }
 
