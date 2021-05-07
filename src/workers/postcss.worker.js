@@ -21,6 +21,7 @@ import {
 import CompileWorker from 'worker-loader?publicPath=/_next/&filename=static/chunks/[name].[hash].js&chunkFilename=static/chunks/[id].[contenthash].worker.js!./compile.worker.js'
 import { createWorkerQueue } from '../utils/workers'
 import './subworkers'
+import { getVariants } from '../utils/getVariants'
 
 const compileWorker = createWorkerQueue(CompileWorker)
 
@@ -91,12 +92,16 @@ addEventListener('message', async (event) => {
         )
         break
       case 'documentColors':
-        result = fallback(
-          () =>
-            getDocumentColors(state, document).map(({ color, range }) => ({
-              range: asMonacoRange(range),
-              color,
-            })),
+        result = await fallback(
+          async () =>
+            (await getDocumentColors(state, document)).map(
+              ({ color, range }) => ({
+                range: asMonacoRange(range),
+                color: `rgba(${color.red * 255}, ${color.green * 255}, ${
+                  color.blue * 255
+                }, ${color.alpha})`,
+              })
+            ),
           []
         )
         break
@@ -115,8 +120,50 @@ addEventListener('message', async (event) => {
 
     if (!result.error && !result.canceled) {
       if (result.state) {
+        let [
+          postcss,
+          { default: postcssSelectorParser },
+          { generateRules },
+          { default: setupContext },
+        ] = await Promise.all([
+          import('postcss'),
+          import('postcss-selector-parser'),
+          import('tailwindcss/jit/lib/generateRules'),
+          import('tailwindcss/jit/lib/setupContext'),
+        ])
+
         state = result.state
+        state.modules = {
+          jit: {
+            generateRules: {
+              module: generateRules,
+            },
+          },
+          postcss: { module: postcss },
+          postcssSelectorParser: { module: postcssSelectorParser },
+        }
+        state.jitContext = setupContext(state.config)(
+          { opts: {}, messages: [] },
+          postcss.root()
+        )
       }
+      state.variants = getVariants(state)
+      state.editor.getConfiguration = () => ({
+        editor: {
+          tabSize: 2,
+        },
+        tailwindCSS: {
+          validate: true,
+          lint: {
+            cssConflict: 'warning',
+            invalidApply: 'error',
+            invalidScreen: 'error',
+            invalidVariant: 'error',
+            invalidConfigPath: 'error',
+            invalidTailwindDirective: 'error',
+          },
+        },
+      })
       postMessage({
         _id: event.data._id,
         css: result.css,

@@ -2,7 +2,6 @@ import autoprefixer from 'autoprefixer'
 import { klona } from 'klona/full'
 import extractClasses from './extractClasses'
 import { removeFunctions } from '../utils/object'
-import { getVariants } from '../utils/getVariants'
 
 const VIRTUAL_HTML_FILENAME = '/htmlInput'
 
@@ -181,10 +180,10 @@ export async function processCss(
   if (lspRoot) {
     state = {}
     state.enabled = true
+    state.jit = jit
     state.classNames = await extractClasses(lspRoot)
     state.separator = separator
     state.config = resolveConfig(klona(configInput))
-    state.variants = getVariants({ config: state.config, postcss })
     removeFunctions(state.config)
     state.version =
       tailwindVersion === '1'
@@ -193,18 +192,6 @@ export async function processCss(
     state.editor = {
       userLanguages: {},
       capabilities: {},
-      globalSettings: {
-        tabSize: 2,
-        validate: true,
-        lint: {
-          cssConflict: 'warning',
-          invalidApply: 'error',
-          invalidScreen: 'error',
-          invalidVariant: 'error',
-          invalidConfigPath: 'error',
-          invalidTailwindDirective: 'error',
-        },
-      },
     }
     state.featureFlags = featureFlags
   }
