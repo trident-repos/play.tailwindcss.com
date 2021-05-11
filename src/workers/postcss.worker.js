@@ -22,6 +22,8 @@ import CompileWorker from 'worker-loader?publicPath=/_next/&filename=static/chun
 import { createWorkerQueue } from '../utils/workers'
 import './subworkers'
 import { getVariants } from '../utils/getVariants'
+import { parseConfig } from './parseConfig'
+import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
 
 const compileWorker = createWorkerQueue(CompileWorker)
 
@@ -32,7 +34,7 @@ addEventListener('message', async (event) => {
     let result
 
     function fallback(fn, fallbackValue) {
-      if (!state) return fallbackValue
+      if (!state || !state.enabled) return fallbackValue
       return fn()
     }
 
@@ -120,32 +122,46 @@ addEventListener('message', async (event) => {
 
     if (!result.error && !result.canceled) {
       if (result.state) {
+        let tailwindVersion = toValidTailwindVersion(event.data.tailwindVersion)
         let [
           postcss,
           { default: postcssSelectorParser },
           { generateRules },
           { default: setupContext },
+          { default: resolveConfig },
         ] = await Promise.all([
           import('postcss'),
           import('postcss-selector-parser'),
-          import('tailwindcss/jit/lib/generateRules'),
-          import('tailwindcss/jit/lib/setupContext'),
+          result.state.jit ? import('tailwindcss/jit/lib/generateRules') : {},
+          result.state.jit ? import('tailwindcss/jit/lib/setupContext') : {},
+          tailwindVersion === 2
+            ? import('tailwindcss/resolveConfig')
+            : import('tailwindcss-v1/resolveConfig'),
         ])
 
         state = result.state
         state.modules = {
-          jit: {
-            generateRules: {
-              module: generateRules,
-            },
-          },
           postcss: { module: postcss },
           postcssSelectorParser: { module: postcssSelectorParser },
+          ...(result.state.jit
+            ? {
+                jit: {
+                  generateRules: {
+                    module: generateRules,
+                  },
+                },
+              }
+            : {}),
         }
-        state.jitContext = setupContext(state.config)(
-          { opts: {}, messages: [] },
-          postcss.root()
+        state.config = resolveConfig(
+          await parseConfig(event.data.config, tailwindVersion)
         )
+        if (result.state.jit) {
+          state.jitContext = setupContext(state.config)(
+            { opts: {}, messages: [] },
+            postcss.root()
+          )
+        }
       }
       state.variants = getVariants(state)
       state.editor.getConfiguration = () => ({
@@ -164,6 +180,7 @@ addEventListener('message', async (event) => {
           },
         },
       })
+      state.enabled = true
       postMessage({
         _id: event.data._id,
         css: result.css,

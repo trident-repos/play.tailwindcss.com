@@ -1,7 +1,6 @@
 import autoprefixer from 'autoprefixer'
 import { klona } from 'klona/full'
 import extractClasses from './extractClasses'
-import { removeFunctions } from '../utils/object'
 
 const VIRTUAL_HTML_FILENAME = '/htmlInput'
 
@@ -9,13 +8,11 @@ const deps = {
   1: [
     () => import('tailwindcss-v1'),
     () => import('postcss-v7'),
-    () => import('tailwindcss-v1/resolveConfig'),
     () => import('tailwindcss-v1/lib/featureFlags'),
   ],
   2: [
     () => import('tailwindcss'),
     () => import('postcss'),
-    () => import('tailwindcss/resolveConfig'),
     () => import('tailwindcss/lib/featureFlags'),
   ],
 }
@@ -29,7 +26,7 @@ export async function processCss(
 ) {
   let jit = false
   const config = klona(configInput)
-  const [tailwindcss, postcss, resolveConfig, featureFlags] = (
+  const [tailwindcss, postcss, featureFlags] = (
     await Promise.all(deps[tailwindVersion].map((x) => x()))
   ).map((x) => x.default || x)
 
@@ -47,6 +44,16 @@ export async function processCss(
     config.separator = `__TWSEP__${separator}__TWSEP__`
   }
 
+  let jitContext
+  if (jit && !skipIntelliSense) {
+    jitContext = require('tailwindcss/jit/lib/setupContext')({
+      ...config,
+      mode: 'jit',
+      separator,
+      purge: [VIRTUAL_HTML_FILENAME],
+    })({ opts: {}, messages: [] }, postcss.root())
+  }
+
   const applyComplexClasses =
     tailwindVersion === '1'
       ? require('tailwindcss-v1/lib/flagged/applyComplexClasses')
@@ -55,6 +62,10 @@ export async function processCss(
   if (!applyComplexClasses.default.__patched) {
     let _applyComplexClasses = applyComplexClasses.default
     applyComplexClasses.default = (config, ...args) => {
+      if (jit) {
+        return require('tailwindcss/jit/lib/expandApplyAtRules')(jitContext)
+      }
+
       let configClone = klona(config)
       configClone.separator = separator
 
@@ -107,69 +118,26 @@ export async function processCss(
     css = result.css
     lspRoot = result.root
   } else {
-    let layers = new Set()
-    let result = await postcss([
-      (root) => {
-        root.walkAtRules('tailwind', (rule) => {
-          if (
-            ['base', 'components', 'utilities', 'screens'].includes(rule.params)
-          ) {
-            rule.before(postcss.comment({ text: '__start_layer__' }))
-            rule.after(postcss.comment({ text: '__end_layer__' }))
-            layers.add(rule.params)
-          }
-        })
-        if (!layers.has('screens')) {
-          root.append([
-            postcss.comment({ text: '__start_layer__' }),
-            postcss.atRule({ name: 'tailwind', params: 'screens' }),
-            postcss.comment({ text: '__end_layer__' }),
-          ])
-        }
-      },
-      tailwindcss({
-        ...config,
-        mode: 'jit',
-        separator,
-        purge: [VIRTUAL_HTML_FILENAME],
-      }),
-      autoprefixer(),
-    ]).process(cssInput, {
-      from: undefined,
-    })
-
-    css = result.css
+    css = (
+      await postcss([
+        tailwindcss({
+          ...config,
+          mode: 'jit',
+          separator,
+          purge: [VIRTUAL_HTML_FILENAME],
+        }),
+        autoprefixer(),
+      ]).process(cssInput, {
+        from: undefined,
+      })
+    ).css
 
     if (!skipIntelliSense) {
-      let layersRoot = (
-        await postcss([tailwindcss(config), autoprefixer()]).process(
-          Array.from(layers)
-            .map((layer) => `@tailwind ${layer};`)
-            .join('\n'),
-          {
-            from: undefined,
-          }
-        )
+      lspRoot = (
+        await postcss([tailwindcss(config), autoprefixer()]).process(cssInput, {
+          from: undefined,
+        })
       ).root
-
-      let insideLayer = false
-      result.root.walk((node) => {
-        if (node.type === 'comment') {
-          if (node.text === '__start_layer__') {
-            insideLayer = true
-            node.remove()
-          } else if (node.text === '__end_layer__') {
-            insideLayer = false
-            node.remove()
-          }
-        } else if (insideLayer) {
-          node.remove()
-        }
-      })
-
-      result.root.prepend(layersRoot.nodes)
-
-      lspRoot = result.root
     }
   }
 
@@ -179,12 +147,9 @@ export async function processCss(
 
   if (lspRoot) {
     state = {}
-    state.enabled = true
     state.jit = jit
     state.classNames = await extractClasses(lspRoot)
     state.separator = separator
-    state.config = resolveConfig(klona(configInput))
-    removeFunctions(state.config)
     state.version =
       tailwindVersion === '1'
         ? require('tailwindcss-v1/package.json?version').version
