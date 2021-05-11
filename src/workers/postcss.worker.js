@@ -132,7 +132,7 @@ addEventListener('message', async (event) => {
           import('postcss-selector-parser'),
           result.state.jit ? import('tailwindcss/jit/lib/generateRules') : {},
           result.state.jit ? import('tailwindcss/jit/lib/setupContext') : {},
-          tailwindVersion === 2
+          tailwindVersion === '2'
             ? import('tailwindcss/resolveConfig')
             : import('tailwindcss-v1/resolveConfig'),
         ])
