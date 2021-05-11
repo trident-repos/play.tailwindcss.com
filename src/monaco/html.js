@@ -80,8 +80,19 @@ export function setupHtmlMode(content, onChange, worker, getEditor) {
   )
 
   let colorProvider
+
+  disposables.push({
+    dispose() {
+      if (colorProvider) {
+        colorProvider.dispose()
+      }
+    },
+  })
+
   function registerColorProvider() {
-    if (colorProvider) return
+    if (colorProvider) {
+      colorProvider.dispose()
+    }
 
     colorProvider = monaco.languages.registerColorProvider('html', {
       provideDocumentColors: async (model) => {
@@ -150,8 +161,6 @@ export function setupHtmlMode(content, onChange, worker, getEditor) {
         ].map((value) => ({ label: `${prefix}-[${value}]` }))
       },
     })
-
-    disposables.push(colorProvider)
   }
 
   const model = monaco.editor.createModel(content || '', 'html', HTML_URI)
