@@ -36,7 +36,7 @@ export async function processCss(
 
   config.purge = false
 
-  if (config.mode === 'jit') {
+  if (tailwindVersion === '2' && config.mode === 'jit') {
     config.variants = []
     delete config.mode
     jit = true
