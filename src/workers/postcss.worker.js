@@ -70,22 +70,27 @@ addEventListener('message', async (event) => {
         )
         break
       case 'resolveCompletionItem':
-        result = asMonacoCompletionItem(
-          await resolveCompletionItem(
-            state,
-            asLspCompletionItem(event.data.lsp.item)
+        result = await fallback(async () =>
+          asMonacoCompletionItem(
+            await resolveCompletionItem(
+              state,
+              asLspCompletionItem(event.data.lsp.item)
+            )
           )
         )
         break
       case 'hover':
-        const hover = await doHover(state, document, {
-          line: event.data.lsp.position.lineNumber - 1,
-          character: event.data.lsp.position.column - 1,
+        result = await fallback(async () => {
+          const hover = await doHover(state, document, {
+            line: event.data.lsp.position.lineNumber - 1,
+            character: event.data.lsp.position.column - 1,
+          })
+          if (hover && hover.contents.language === 'css') {
+            hover.contents.language = 'tailwindcss'
+          }
+          console.log(state.config.theme.colors)
+          return asMonacoHover(hover)
         })
-        if (hover && hover.contents.language === 'css') {
-          hover.contents.language = 'tailwindcss'
-        }
-        result = fallback(() => asMonacoHover(hover))
         break
       case 'validate':
         result = await fallback(
