@@ -112,7 +112,12 @@ export function createMonacoEditor({
     }
   })
 
+  let isInitialChange = true
   editor.onDidChangeModel(() => {
+    if (isInitialChange) {
+      isInitialChange = false
+      return
+    }
     const currentModel = editor.getModel()
     if (currentModel === html.getModel()) {
       html.updateDecorations()

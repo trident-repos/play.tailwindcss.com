@@ -99,9 +99,7 @@ addEventListener('message', async (event) => {
             (await getDocumentColors(state, document)).map(
               ({ color, range }) => ({
                 range: asMonacoRange(range),
-                color: `rgba(${color.red * 255}, ${color.green * 255}, ${
-                  color.blue * 255
-                }, ${color.alpha})`,
+                color,
               })
             ),
           []
