@@ -88,7 +88,6 @@ addEventListener('message', async (event) => {
           if (hover && hover.contents.language === 'css') {
             hover.contents.language = 'tailwindcss'
           }
-          console.log(state.config.theme.colors)
           return asMonacoHover(hover)
         })
         break
