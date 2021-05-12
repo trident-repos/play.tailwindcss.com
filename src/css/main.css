@@ -47,6 +47,62 @@ body.cursor-nwse-resize * {
   display: block;
 }
 
+.monaco-editor
+  .suggest-widget
+  .monaco-list
+  .monaco-list-row
+  > .contents
+  > .main
+  > .left {
+  flex: none !important;
+}
+
+.monaco-editor
+  .suggest-widget
+  .monaco-list
+  .monaco-list-row
+  > .contents
+  > .main
+  > .right {
+  flex: auto !important;
+  justify-content: flex-end !important;
+  max-width: none !important;
+}
+
+.monaco-editor
+  .suggest-widget
+  .monaco-list
+  .monaco-list-row
+  > .contents
+  > .main
+  > .right
+  > .details-label {
+  margin-left: 2em !important;
+}
+
+.monaco-editor
+  .suggest-widget:not(.docs-side)
+  .monaco-list
+  .monaco-list-row:hover
+  > .contents
+  > .main
+  > .right.can-expand-details
+  > .details-label {
+  width: auto !important;
+  padding-right: 26px !important;
+}
+
+.monaco-editor
+  .suggest-widget
+  .details
+  > .monaco-scrollable-element
+  > .body
+  > .docs
+  .code {
+  font-family: Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace !important;
+}
+
 .Resizer {
   background-color: theme('colors.gray.200');
   z-index: 1;
