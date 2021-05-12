@@ -131,12 +131,16 @@ addEventListener('message', async (event) => {
           { default: postcssSelectorParser },
           { generateRules },
           { default: setupContext },
+          { default: expandApplyAtRules },
           { default: resolveConfig },
         ] = await Promise.all([
           import('postcss'),
           import('postcss-selector-parser'),
           result.state.jit ? import('tailwindcss/jit/lib/generateRules') : {},
           result.state.jit ? import('tailwindcss/jit/lib/setupContext') : {},
+          result.state.jit
+            ? import('tailwindcss/jit/lib/expandApplyAtRules')
+            : {},
           tailwindVersion === '2'
             ? import('tailwindcss/resolveConfig')
             : import('tailwindcss-v1/resolveConfig'),
@@ -151,6 +155,9 @@ addEventListener('message', async (event) => {
                 jit: {
                   generateRules: {
                     module: generateRules,
+                  },
+                  expandApplyAtRules: {
+                    module: expandApplyAtRules,
                   },
                 },
               }
