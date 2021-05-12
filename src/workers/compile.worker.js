@@ -76,9 +76,7 @@ addEventListener('message', async (event) => {
   } catch (error) {
     console.log(error)
     if (error.toString().startsWith('CssSyntaxError')) {
-      const match = error.message.match(
-        /^<css input>:([0-9]+):([0-9]+): (.*?)$/
-      )
+      const match = error.message.match(/^.*?:([0-9]+):([0-9]+): (.*?)$/)
       respond({ error: { message: match[3], file: 'CSS', line: match[1] } })
     } else {
       respond({ error: { message: error.message } })
