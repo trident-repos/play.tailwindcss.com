@@ -29,7 +29,7 @@ export function Header({
               v1.9.6
             </option>
             <option value="2" className="text-initial">
-              v2.1.1
+              v2.1.2
             </option>
           </select>
           <svg
