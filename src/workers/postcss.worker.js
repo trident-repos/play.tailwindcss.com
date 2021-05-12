@@ -24,10 +24,13 @@ import './subworkers'
 import { getVariants } from '../utils/getVariants'
 import { parseConfig } from './parseConfig'
 import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
+import { VIRTUAL_HTML_FILENAME, VIRTUAL_SOURCE_PATH } from '../constants'
 
 const compileWorker = createWorkerQueue(CompileWorker)
 
 let state
+
+let lastCss
 
 addEventListener('message', async (event) => {
   if (event.data.lsp) {
@@ -114,6 +117,10 @@ addEventListener('message', async (event) => {
     return postMessage({ _id: event.data._id, result })
   }
 
+  if (typeof event.data.css !== 'undefined') {
+    lastCss = event.data.css
+  }
+
   if (
     (typeof event.data.css !== 'undefined' &&
       typeof event.data.config !== 'undefined' &&
@@ -123,10 +130,13 @@ addEventListener('message', async (event) => {
     const result = await compileWorker.emit(event.data)
 
     if (!result.error && !result.canceled) {
+      if ('buildId' in result) {
+        self.BUILD_ID = result.buildId
+      }
       if (result.state) {
         let tailwindVersion = toValidTailwindVersion(event.data.tailwindVersion)
         let [
-          postcss,
+          { default: postcss },
           { default: postcssSelectorParser },
           { generateRules },
           { default: setupContext },
@@ -162,13 +172,15 @@ addEventListener('message', async (event) => {
               }
             : {}),
         }
-        state.config = resolveConfig(
-          await parseConfig(event.data.config, tailwindVersion)
-        )
+        let config = await parseConfig(event.data.config, tailwindVersion)
+        state.config = resolveConfig(config)
         if (result.state.jit) {
-          state.jitContext = setupContext(state.config)(
-            { opts: {}, messages: [] },
-            postcss.root()
+          state.jitContext = setupContext({
+            ...config,
+            purge: [VIRTUAL_HTML_FILENAME],
+          })(
+            { opts: { from: VIRTUAL_SOURCE_PATH }, messages: [] },
+            postcss.parse(lastCss)
           )
         }
       }

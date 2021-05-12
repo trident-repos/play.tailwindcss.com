@@ -1,8 +1,7 @@
 import autoprefixer from 'autoprefixer'
 import { klona } from 'klona/full'
+import { VIRTUAL_SOURCE_PATH, VIRTUAL_HTML_FILENAME } from '../constants'
 import extractClasses from './extractClasses'
-
-const VIRTUAL_HTML_FILENAME = '/htmlInput'
 
 const deps = {
   1: [
@@ -32,26 +31,24 @@ export async function processCss(
 
   self[VIRTUAL_HTML_FILENAME] = htmlInput
 
-  const separator = config.separator || ':'
-
-  config.purge = false
+  let separator =
+    typeof config.separator === 'undefined' ? ':' : config.separator
+  separator = `${separator}`
 
   if (tailwindVersion === '2' && config.mode === 'jit') {
-    config.variants = []
-    delete config.mode
+    config.purge = [VIRTUAL_HTML_FILENAME]
     jit = true
   } else {
     config.separator = `__TWSEP__${separator}__TWSEP__`
+    config.purge = false
   }
 
   let jitContext
   if (jit && !skipIntelliSense) {
-    jitContext = require('tailwindcss/jit/lib/setupContext')({
-      ...config,
-      mode: 'jit',
-      separator,
-      purge: [VIRTUAL_HTML_FILENAME],
-    })({ opts: {}, messages: [] }, postcss.root())
+    jitContext = require('tailwindcss/jit/lib/setupContext')(config)(
+      { opts: { from: VIRTUAL_SOURCE_PATH }, messages: [] },
+      postcss.parse(cssInput)
+    )
   }
 
   const applyComplexClasses =
@@ -119,22 +116,17 @@ export async function processCss(
     lspRoot = result.root
   } else {
     css = (
-      await postcss([
-        tailwindcss({
-          ...config,
-          mode: 'jit',
-          separator,
-          purge: [VIRTUAL_HTML_FILENAME],
-        }),
-        autoprefixer(),
-      ]).process(cssInput, {
-        from: undefined,
+      await postcss([tailwindcss(config), autoprefixer()]).process(cssInput, {
+        from: VIRTUAL_SOURCE_PATH,
       })
     ).css
 
     if (!skipIntelliSense) {
       lspRoot = (
-        await postcss([tailwindcss(config), autoprefixer()]).process(cssInput, {
+        await postcss([
+          tailwindcss({ ...config, mode: 'aot', purge: false, variants: [] }),
+          autoprefixer(),
+        ]).process(cssInput, {
           from: undefined,
         })
       ).root
@@ -142,8 +134,6 @@ export async function processCss(
   }
 
   let state
-
-  config.separator = separator
 
   if (lspRoot) {
     state = {}

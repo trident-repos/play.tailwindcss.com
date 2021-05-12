@@ -2,6 +2,8 @@ import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
 import { processCss } from './processCss'
 import { parseConfig } from './parseConfig'
 
+self.BUILD_ID = 0
+
 let current
 
 let lastHtml
@@ -21,6 +23,12 @@ addEventListener('message', async (event) => {
   if ('tailwindVersion' in event.data) {
     tailwindVersion = toValidTailwindVersion(event.data.tailwindVersion)
   }
+
+  if (css !== lastCss || config !== lastConfig) {
+    self.BUILD_ID++
+  }
+
+  let buildId = self.BUILD_ID
 
   lastHtml = html
   lastCss = css
@@ -64,7 +72,7 @@ addEventListener('message', async (event) => {
       tailwindVersion,
       event.data.skipIntelliSense
     )
-    respond({ state, css: compiledCss, html: compiledHtml, jit })
+    respond({ state, css: compiledCss, html: compiledHtml, jit, buildId })
   } catch (error) {
     console.log(error)
     if (error.toString().startsWith('CssSyntaxError')) {
