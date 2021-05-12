@@ -1,4 +1,5 @@
 import { PLUGIN_BUILDER_VERSION } from '../constants'
+import colors from 'tailwindcss/colors'
 
 export async function parseConfig(configStr, tailwindVersion) {
   let mod = {}
@@ -41,6 +42,9 @@ export async function parseConfig(configStr, tailwindVersion) {
       }
       if (m === '') {
         throw new RequireError("The argument 'id' must be a non-empty string. Received ''", line)
+      }
+      if (m === 'tailwindcss/colors') {
+        return ${JSON.stringify(colors)}
       }
       let result
       try {
