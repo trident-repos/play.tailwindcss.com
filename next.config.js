@@ -214,6 +214,28 @@ module.exports = withTM({
       }),
     })
 
+    // mock `fileURLToPath` and `pathToFileURL` functions
+    // from the `url` module
+    config.module.rules.push({
+      test: {
+        or: [
+          require.resolve('postcss/lib/input.js'),
+          require.resolve('postcss/lib/map-generator.js'),
+        ],
+      },
+      use: [
+        createLoader(function (source) {
+          return source.replace(
+            /let {\s*([^}]+)\s*} = require\('url'\)/,
+            (_, names) =>
+              names
+                .split(/\s*,\s*/)
+                .reduce((acc, cur) => `${acc}let ${cur} = x => x;`, '')
+          )
+        }),
+      ],
+    })
+
     config.output.globalObject = 'self'
 
     return config
