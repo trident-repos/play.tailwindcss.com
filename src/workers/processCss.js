@@ -16,6 +16,12 @@ const deps = {
   ],
 }
 
+const applyModule1 = require('tailwindcss-v1/lib/flagged/applyComplexClasses')
+const applyModule2 = require('tailwindcss/lib/lib/substituteClassApplyAtRules')
+
+const apply1 = applyModule1.default
+const apply2 = applyModule2.default
+
 export async function processCss(
   configInput,
   htmlInput,
@@ -52,54 +58,51 @@ export async function processCss(
   }
 
   const applyComplexClasses =
-    tailwindVersion === '1'
-      ? require('tailwindcss-v1/lib/flagged/applyComplexClasses')
-      : require('tailwindcss/lib/lib/substituteClassApplyAtRules')
+    tailwindVersion === '1' ? applyModule1 : applyModule2
 
-  if (!applyComplexClasses.default.__patched) {
-    let _applyComplexClasses = applyComplexClasses.default
-    applyComplexClasses.default = (config, ...args) => {
-      if (jit) {
-        return require('tailwindcss/jit/lib/expandApplyAtRules')(jitContext)
-      }
-
-      let configClone = klona(config)
-      configClone.separator = separator
-
-      let fn = _applyComplexClasses(configClone, ...args)
-
-      return async (css) => {
-        css.walkRules((rule) => {
-          const newSelector = rule.selector.replace(
-            /__TWSEP__(.*?)__TWSEP__/g,
-            '$1'
-          )
-          if (newSelector !== rule.selector) {
-            rule.before(
-              postcss.comment({
-                text: '__ORIGINAL_SELECTOR__:' + rule.selector,
-              })
-            )
-            rule.selector = newSelector
-          }
-        })
-
-        await fn(css)
-
-        css.walkComments((comment) => {
-          if (comment.text.startsWith('__ORIGINAL_SELECTOR__:')) {
-            comment.next().selector = comment.text.replace(
-              /^__ORIGINAL_SELECTOR__:/,
-              ''
-            )
-            comment.remove()
-          }
-        })
-
-        return css
-      }
+  applyComplexClasses.default = (config, ...args) => {
+    if (jit) {
+      return require('tailwindcss/jit/lib/expandApplyAtRules')(jitContext)
     }
-    applyComplexClasses.default.__patched = true
+
+    let configClone = klona(config)
+    configClone.separator = separator
+
+    let fn =
+      tailwindVersion === '1'
+        ? apply1(configClone, ...args)
+        : apply2(configClone, ...args)
+
+    return async (css) => {
+      css.walkRules((rule) => {
+        const newSelector = rule.selector.replace(
+          /__TWSEP__(.*?)__TWSEP__/g,
+          '$1'
+        )
+        if (newSelector !== rule.selector) {
+          rule.before(
+            postcss.comment({
+              text: '__ORIGINAL_SELECTOR__:' + rule.selector,
+            })
+          )
+          rule.selector = newSelector
+        }
+      })
+
+      await fn(css)
+
+      css.walkComments((comment) => {
+        if (comment.text.startsWith('__ORIGINAL_SELECTOR__:')) {
+          comment.next().selector = comment.text.replace(
+            /^__ORIGINAL_SELECTOR__:/,
+            ''
+          )
+          comment.remove()
+        }
+      })
+
+      return css
+    }
   }
 
   let css
