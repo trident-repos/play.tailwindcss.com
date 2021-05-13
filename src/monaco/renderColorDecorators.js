@@ -20,7 +20,7 @@ export function renderColorDecorators(editor, model, newDecorations) {
           height: 0.8em;
           margin: 0.1em 0.2em 0;
           border: 0.1em solid black;
-          background-color: ${color};
+          background-color: rgba(${color.red * 255}, ${color.green * 255}, ${color.blue * 255}, ${color.alpha});
         }
         .vs-dark ._color-block-${i}::before {
           border-color: rgb(238, 238, 238);

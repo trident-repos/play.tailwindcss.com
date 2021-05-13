@@ -1,31 +1,34 @@
 import dlv from 'dlv'
 
-export function runPlugin(plugin, { config, ...rest } = {}) {
+export function runPlugin(plugin, state, overrides) {
   try {
     ;(plugin.handler || plugin)({
       addUtilities: () => {},
       addComponents: () => {},
       addBase: () => {},
+      matchUtilities: () => {},
       addVariant: () => {},
       e: (x) => x,
       prefix: (x) => x,
-      theme: (path, defaultValue) => dlv(config, `theme.${path}`, defaultValue),
+      theme: (path, defaultValue) =>
+        dlv(state.config, `theme.${path}`, defaultValue),
       variants: () => [],
-      config: (path, defaultValue) => dlv(config, path, defaultValue),
+      config: (path, defaultValue) => dlv(state.config, path, defaultValue),
       corePlugins: (path) => {
-        if (Array.isArray(config.corePlugins)) {
-          return config.corePlugins.includes(path)
+        if (Array.isArray(state.config.corePlugins)) {
+          return state.config.corePlugins.includes(path)
         }
-        return dlv(config, `corePlugins.${path}`, true)
+        return dlv(state.config, `corePlugins.${path}`, true)
       },
       target: (path) => {
-        if (typeof config.target === 'string') {
-          return config.target
+        if (typeof state.config.target === 'string') {
+          return state.config.target
         }
-        const [defaultTarget, targetOverrides] = dlv(config, 'target')
+        const [defaultTarget, targetOverrides] = dlv(state.config, 'target')
         return dlv(targetOverrides, path, defaultTarget)
       },
-      ...rest,
+      postcss: state.modules.postcss.module,
+      ...overrides,
     })
   } catch (_) {}
 }

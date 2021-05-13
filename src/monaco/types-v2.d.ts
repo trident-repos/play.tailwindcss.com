@@ -290,5 +290,8 @@ export type TailwindConfig = Partial<
     variants: VariantsConfig;
     corePlugins: CorePluginsConfig;
     plugins: PluginsConfig;
+    mode: 'jit' | 'aot';
+    /** Custom */
+    [key: string]: any;
   }
 >;

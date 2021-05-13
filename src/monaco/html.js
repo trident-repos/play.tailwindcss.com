@@ -4,6 +4,9 @@ import { renderColorDecorators } from './renderColorDecorators'
 import { requestResponse } from '../utils/workers'
 import { debounce } from 'debounce'
 import { setupEmmet } from './emmet'
+import { names as namedColors, fromRatio } from '@ctrl/tinycolor'
+
+const colorNames = Object.keys(namedColors)
 
 export const HTML_URI = 'file:///HTML'
 
@@ -76,6 +79,90 @@ export function setupHtmlMode(content, onChange, worker, getEditor) {
     })
   )
 
+  let colorProvider
+
+  disposables.push({
+    dispose() {
+      if (colorProvider) {
+        colorProvider.dispose()
+      }
+    },
+  })
+
+  function registerColorProvider() {
+    if (colorProvider) {
+      colorProvider.dispose()
+    }
+
+    colorProvider = monaco.languages.registerColorProvider('html', {
+      provideDocumentColors: async (model) => {
+        let { result: colors } = await requestResponse(worker.current, {
+          lsp: {
+            type: 'documentColors',
+            text: model.getValue(),
+            language: 'html',
+            uri: HTML_URI,
+          },
+        })
+
+        let editableColors = colors.filter((color) => {
+          let text = model.getValueInRange(color.range)
+          return new RegExp(
+            `-\\[(${colorNames.join('|')}|((?:#|rgba?\\(|hsla?\\())[^\\]]+)\\]$`
+          ).test(text)
+        })
+
+        let nonEditableColors = colors.filter(
+          (color) => !editableColors.includes(color)
+        )
+        renderColorDecorators(getEditor(), model, nonEditableColors)
+
+        return editableColors
+      },
+      provideColorPresentations(model, params) {
+        let className = model.getValueInRange(params.range)
+        let match = className.match(
+          new RegExp(
+            `-\\[(${colorNames.join(
+              '|'
+            )}|(?:(?:#|rgba?\\(|hsla?\\())[^\\]]+)\\]$`,
+            'i'
+          )
+        )
+
+        if (match === null) return []
+
+        let currentColor = match[1]
+
+        let isNamedColor = colorNames.includes(currentColor)
+        let color = fromRatio({
+          r: params.color.red,
+          g: params.color.green,
+          b: params.color.blue,
+          a: params.color.alpha,
+        })
+
+        let hexValue = color.toHex8String(
+          !isNamedColor &&
+            (currentColor.length === 4 || currentColor.length === 5)
+        )
+        if (hexValue.length === 5) {
+          hexValue = hexValue.replace(/f$/, '')
+        } else if (hexValue.length === 9) {
+          hexValue = hexValue.replace(/ff$/, '')
+        }
+
+        let prefix = className.substr(0, match.index)
+
+        return [
+          hexValue,
+          color.toRgbString().replace(/ /g, ''),
+          color.toHslString().replace(/ /g, ''),
+        ].map((value) => ({ label: `${prefix}-[${value}]` }))
+      },
+    })
+  }
+
   const model = monaco.editor.createModel(content || '', 'html', HTML_URI)
   model.updateOptions({ indentSize: 2, tabSize: 2 })
   disposables.push(model)
@@ -118,15 +205,7 @@ export function setupHtmlMode(content, onChange, worker, getEditor) {
   })
 
   const updateDecorations = debounce(async () => {
-    let { result: colors } = await requestResponse(worker.current, {
-      lsp: {
-        type: 'documentColors',
-        text: model.getValue(),
-        language: 'html',
-        uri: HTML_URI,
-      },
-    })
-    renderColorDecorators(getEditor(), model, colors)
+    registerColorProvider()
 
     let { result } = await requestResponse(worker.current, {
       lsp: {
@@ -145,8 +224,6 @@ export function setupHtmlMode(content, onChange, worker, getEditor) {
       monaco.editor.setModelMarkers(model, 'default', [])
     }
   }, 100)
-
-  updateDecorations()
 
   disposables.push(
     model.onDidChangeContent(() => {

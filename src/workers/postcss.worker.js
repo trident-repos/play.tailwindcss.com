@@ -21,17 +21,23 @@ import {
 import CompileWorker from 'worker-loader?publicPath=/_next/&filename=static/chunks/[name].[hash].js&chunkFilename=static/chunks/[id].[contenthash].worker.js!./compile.worker.js'
 import { createWorkerQueue } from '../utils/workers'
 import './subworkers'
+import { getVariants } from '../utils/getVariants'
+import { parseConfig } from './parseConfig'
+import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
+import { VIRTUAL_HTML_FILENAME, VIRTUAL_SOURCE_PATH } from '../constants'
 
 const compileWorker = createWorkerQueue(CompileWorker)
 
 let state
+
+let lastCss
 
 addEventListener('message', async (event) => {
   if (event.data.lsp) {
     let result
 
     function fallback(fn, fallbackValue) {
-      if (!state) return fallbackValue
+      if (!state || !state.enabled) return fallbackValue
       return fn()
     }
 
@@ -67,22 +73,26 @@ addEventListener('message', async (event) => {
         )
         break
       case 'resolveCompletionItem':
-        result = asMonacoCompletionItem(
-          await resolveCompletionItem(
-            state,
-            asLspCompletionItem(event.data.lsp.item)
+        result = await fallback(async () =>
+          asMonacoCompletionItem(
+            await resolveCompletionItem(
+              state,
+              asLspCompletionItem(event.data.lsp.item)
+            )
           )
         )
         break
       case 'hover':
-        const hover = await doHover(state, document, {
-          line: event.data.lsp.position.lineNumber - 1,
-          character: event.data.lsp.position.column - 1,
+        result = await fallback(async () => {
+          const hover = await doHover(state, document, {
+            line: event.data.lsp.position.lineNumber - 1,
+            character: event.data.lsp.position.column - 1,
+          })
+          if (hover && hover.contents.language === 'css') {
+            hover.contents.language = 'tailwindcss'
+          }
+          return asMonacoHover(hover)
         })
-        if (hover && hover.contents.language === 'css') {
-          hover.contents.language = 'tailwindcss'
-        }
-        result = fallback(() => asMonacoHover(hover))
         break
       case 'validate':
         result = await fallback(
@@ -91,12 +101,14 @@ addEventListener('message', async (event) => {
         )
         break
       case 'documentColors':
-        result = fallback(
-          () =>
-            getDocumentColors(state, document).map(({ color, range }) => ({
-              range: asMonacoRange(range),
-              color,
-            })),
+        result = await fallback(
+          async () =>
+            (await getDocumentColors(state, document)).map(
+              ({ color, range }) => ({
+                range: asMonacoRange(range),
+                color,
+              })
+            ),
           []
         )
         break
@@ -105,16 +117,97 @@ addEventListener('message', async (event) => {
     return postMessage({ _id: event.data._id, result })
   }
 
+  if (typeof event.data.css !== 'undefined') {
+    lastCss = event.data.css
+  }
+
   if (
     (typeof event.data.css !== 'undefined' &&
-      typeof event.data.config !== 'undefined') ||
+      typeof event.data.config !== 'undefined' &&
+      typeof event.data.html !== 'undefined') ||
     event.data._recompile
   ) {
     const result = await compileWorker.emit(event.data)
 
     if (!result.error && !result.canceled) {
-      state = result.state
-      postMessage({ _id: event.data._id, css: result.css })
+      if ('buildId' in result) {
+        self.BUILD_ID = result.buildId
+      }
+      if (result.state) {
+        let tailwindVersion = toValidTailwindVersion(event.data.tailwindVersion)
+        let [
+          { default: postcss },
+          { default: postcssSelectorParser },
+          { generateRules },
+          { default: setupContext },
+          { default: expandApplyAtRules },
+          { default: resolveConfig },
+        ] = await Promise.all([
+          import('postcss'),
+          import('postcss-selector-parser'),
+          result.state.jit ? import('tailwindcss/jit/lib/generateRules') : {},
+          result.state.jit ? import('tailwindcss/jit/lib/setupContext') : {},
+          result.state.jit
+            ? import('tailwindcss/jit/lib/expandApplyAtRules')
+            : {},
+          tailwindVersion === '2'
+            ? import('tailwindcss/resolveConfig')
+            : import('tailwindcss-v1/resolveConfig'),
+        ])
+
+        state = result.state
+        state.modules = {
+          postcss: { module: postcss },
+          postcssSelectorParser: { module: postcssSelectorParser },
+          ...(result.state.jit
+            ? {
+                jit: {
+                  generateRules: {
+                    module: generateRules,
+                  },
+                  expandApplyAtRules: {
+                    module: expandApplyAtRules,
+                  },
+                },
+              }
+            : {}),
+        }
+        let config = await parseConfig(event.data.config, tailwindVersion)
+        state.config = resolveConfig(config)
+        if (result.state.jit) {
+          state.jitContext = setupContext({
+            ...config,
+            purge: [VIRTUAL_HTML_FILENAME],
+          })(
+            { opts: { from: VIRTUAL_SOURCE_PATH }, messages: [] },
+            postcss.parse(lastCss)
+          )
+        }
+      }
+      state.variants = getVariants(state)
+      state.editor.getConfiguration = () => ({
+        editor: {
+          tabSize: 2,
+        },
+        tailwindCSS: {
+          validate: true,
+          lint: {
+            cssConflict: 'warning',
+            invalidApply: 'error',
+            invalidScreen: 'error',
+            invalidVariant: 'error',
+            invalidConfigPath: 'error',
+            invalidTailwindDirective: 'error',
+          },
+        },
+      })
+      state.enabled = true
+      postMessage({
+        _id: event.data._id,
+        css: result.css,
+        html: result.html,
+        jit: result.jit,
+      })
     } else {
       postMessage({ ...result, _id: event.data._id })
     }

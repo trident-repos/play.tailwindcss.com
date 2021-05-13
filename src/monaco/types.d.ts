@@ -274,5 +274,7 @@ export type TailwindConfig = Partial<
     variants: VariantsConfig;
     corePlugins: CorePluginsConfig;
     plugins: PluginsConfig;
+    /** Custom */
+    [key: string]: any;
   }
 >;

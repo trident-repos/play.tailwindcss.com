@@ -1,119 +1,159 @@
 import autoprefixer from 'autoprefixer'
 import { klona } from 'klona/full'
+import { VIRTUAL_SOURCE_PATH, VIRTUAL_HTML_FILENAME } from '../constants'
 import extractClasses from './extractClasses'
-import { removeFunctions } from '../utils/object'
-import { getVariants } from '../utils/getVariants'
 
 const deps = {
   1: [
     () => import('tailwindcss-v1'),
     () => import('postcss-v7'),
-    () => import('tailwindcss-v1/resolveConfig'),
     () => import('tailwindcss-v1/lib/featureFlags'),
   ],
   2: [
     () => import('tailwindcss'),
     () => import('postcss'),
-    () => import('tailwindcss/resolveConfig'),
     () => import('tailwindcss/lib/featureFlags'),
   ],
 }
 
-export async function processCss(configInput, cssInput, tailwindVersion = '2') {
+const applyModule1 = require('tailwindcss-v1/lib/flagged/applyComplexClasses')
+const applyModule2 = require('tailwindcss/lib/lib/substituteClassApplyAtRules')
+
+const apply1 = applyModule1.default
+const apply2 = applyModule2.default
+
+export async function processCss(
+  configInput,
+  htmlInput,
+  cssInput,
+  tailwindVersion = '2',
+  skipIntelliSense = false
+) {
+  let jit = false
   const config = klona(configInput)
-  const [tailwindcss, postcss, resolveConfig, featureFlags] = (
+  const [tailwindcss, postcss, featureFlags] = (
     await Promise.all(deps[tailwindVersion].map((x) => x()))
   ).map((x) => x.default || x)
 
-  const separator = config.separator || ':'
-  config.separator = `__TWSEP__${separator}__TWSEP__`
-  config.purge = false
-  delete config.mode
+  self[VIRTUAL_HTML_FILENAME] = htmlInput
+
+  let separator =
+    typeof config.separator === 'undefined' ? ':' : config.separator
+  separator = `${separator}`
+
+  if (tailwindVersion === '2' && config.mode === 'jit') {
+    config.purge = [VIRTUAL_HTML_FILENAME]
+    jit = true
+  } else {
+    config.separator = `__TWSEP__${separator}__TWSEP__`
+    config.purge = false
+  }
+
+  let jitContext
+  if (jit && !skipIntelliSense) {
+    jitContext = require('tailwindcss/jit/lib/setupContext')(config)(
+      { opts: { from: VIRTUAL_SOURCE_PATH }, messages: [] },
+      postcss.parse(cssInput)
+    )
+  }
 
   const applyComplexClasses =
-    tailwindVersion === '1'
-      ? require('tailwindcss-v1/lib/flagged/applyComplexClasses')
-      : require('tailwindcss/lib/lib/substituteClassApplyAtRules')
+    tailwindVersion === '1' ? applyModule1 : applyModule2
 
-  if (!applyComplexClasses.default.__patched) {
-    let _applyComplexClasses = applyComplexClasses.default
-    applyComplexClasses.default = (config, ...args) => {
-      let configClone = klona(config)
-      configClone.separator = separator
-
-      let fn = _applyComplexClasses(configClone, ...args)
-
-      return async (css) => {
-        css.walkRules((rule) => {
-          const newSelector = rule.selector.replace(
-            /__TWSEP__(.*?)__TWSEP__/g,
-            '$1'
-          )
-          if (newSelector !== rule.selector) {
-            rule.before(
-              postcss.comment({
-                text: '__ORIGINAL_SELECTOR__:' + rule.selector,
-              })
-            )
-            rule.selector = newSelector
-          }
-        })
-
-        await fn(css)
-
-        css.walkComments((comment) => {
-          if (comment.text.startsWith('__ORIGINAL_SELECTOR__:')) {
-            comment.next().selector = comment.text.replace(
-              /^__ORIGINAL_SELECTOR__:/,
-              ''
-            )
-            comment.remove()
-          }
-        })
-
-        return css
-      }
+  applyComplexClasses.default = (config, ...args) => {
+    if (jit) {
+      return require('tailwindcss/jit/lib/expandApplyAtRules')(jitContext)
     }
-    applyComplexClasses.default.__patched = true
+
+    let configClone = klona(config)
+    configClone.separator = separator
+
+    let fn =
+      tailwindVersion === '1'
+        ? apply1(configClone, ...args)
+        : apply2(configClone, ...args)
+
+    return async (css) => {
+      css.walkRules((rule) => {
+        const newSelector = rule.selector.replace(
+          /__TWSEP__(.*?)__TWSEP__/g,
+          '$1'
+        )
+        if (newSelector !== rule.selector) {
+          rule.before(
+            postcss.comment({
+              text: '__ORIGINAL_SELECTOR__:' + rule.selector,
+            })
+          )
+          rule.selector = newSelector
+        }
+      })
+
+      await fn(css)
+
+      css.walkComments((comment) => {
+        if (comment.text.startsWith('__ORIGINAL_SELECTOR__:')) {
+          comment.next().selector = comment.text.replace(
+            /^__ORIGINAL_SELECTOR__:/,
+            ''
+          )
+          comment.remove()
+        }
+      })
+
+      return css
+    }
   }
 
-  const { css, root } = await postcss([
-    tailwindcss(config),
-    autoprefixer(),
-  ]).process(cssInput, {
-    from: undefined,
-  })
+  let css
+  let lspRoot
 
-  const state = {}
+  if (!jit) {
+    let result = await postcss([tailwindcss(config), autoprefixer()]).process(
+      cssInput,
+      {
+        from: undefined,
+      }
+    )
+    css = result.css
+    lspRoot = result.root
+  } else {
+    css = (
+      await postcss([tailwindcss(config), autoprefixer()]).process(cssInput, {
+        from: VIRTUAL_SOURCE_PATH,
+      })
+    ).css
 
-  config.separator = separator
-  state.enabled = true
-  state.classNames = await extractClasses(root)
-  state.separator = separator
-  state.config = resolveConfig(klona(configInput))
-  state.variants = getVariants({ config: state.config, postcss })
-  removeFunctions(state.config)
-  state.version =
-    tailwindVersion === '1'
-      ? require('tailwindcss-v1/package.json?version').version
-      : require('tailwindcss/package.json?version').version
-  state.editor = {
-    userLanguages: {},
-    capabilities: {},
-    globalSettings: {
-      tabSize: 2,
-      validate: true,
-      lint: {
-        cssConflict: 'warning',
-        invalidApply: 'error',
-        invalidScreen: 'error',
-        invalidVariant: 'error',
-        invalidConfigPath: 'error',
-        invalidTailwindDirective: 'error',
-      },
-    },
+    if (!skipIntelliSense) {
+      lspRoot = (
+        await postcss([
+          tailwindcss({ ...config, mode: 'aot', purge: false, variants: [] }),
+          autoprefixer(),
+        ]).process(cssInput, {
+          from: undefined,
+        })
+      ).root
+    }
   }
-  state.featureFlags = featureFlags
+
+  let state
+
+  if (lspRoot) {
+    state = {}
+    state.jit = jit
+    state.classNames = await extractClasses(lspRoot)
+    state.separator = separator
+    state.version =
+      tailwindVersion === '1'
+        ? require('tailwindcss-v1/package.json?version').version
+        : require('tailwindcss/package.json?version').version
+    state.editor = {
+      userLanguages: {},
+      capabilities: {},
+    }
+    state.featureFlags = featureFlags
+  }
+
   const escapedSeparator = separator.replace(/./g, (m) =>
     /[a-z0-9-_]/i.test(m) ? m : `\\${m}`
   )
@@ -121,5 +161,7 @@ export async function processCss(configInput, cssInput, tailwindVersion = '2') {
   return {
     state,
     css: css.replace(/__TWSEP__.*?__TWSEP__/g, escapedSeparator),
+    jit,
+    ...(jit ? { html: htmlInput } : {}),
   }
 }
