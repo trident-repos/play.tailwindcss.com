@@ -73,10 +73,11 @@ export function getVariants(state) {
             decl.remove()
           })
 
-          let definition = container
-            .toString()
-            .replace(`.${escape(`${variantName}:${placeholder}`)}`, '&')
-            .replace(/(?<!\\)[{}]/g, '')
+          let definition = removeBrackets(
+            container
+              .toString()
+              .replace(`.${escape(`${variantName}:${placeholder}`)}`, '&')
+          )
             .replace(/\s*\n\s*/g, ' ')
             .trim()
 
@@ -127,4 +128,15 @@ export function getVariants(state) {
   })
 
   return variants.reduce((obj, variant) => ({ ...obj, [variant]: null }), {})
+}
+
+function removeBrackets(str) {
+  let result = ''
+  for (let i = 0; i < str.length; i++) {
+    let isBracket = (str[i] === '{' || str[i] === '}') && str[i - 1] !== '\\'
+    if (!isBracket) {
+      result += str[i]
+    }
+  }
+  return result
 }
