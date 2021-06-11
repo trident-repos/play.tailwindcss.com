@@ -76,7 +76,9 @@ export function getVariants(state) {
           let definition = container
             .toString()
             .replace(`.${escape(`${variantName}:${placeholder}`)}`, '&')
-            .replace(/(?<!\\)[{}]/g, '')
+            .replace(/(.)[{}]/g, (match, before) =>
+              before === '\\' ? match : ''
+            )
             .replace(/\s*\n\s*/g, ' ')
             .trim()
 
