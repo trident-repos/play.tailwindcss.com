@@ -139,20 +139,27 @@ addEventListener('message', async (event) => {
           { default: postcss },
           { default: postcssSelectorParser },
           { generateRules },
-          { default: setupContext },
+          { createContext },
           { default: expandApplyAtRules },
           { default: resolveConfig },
         ] = await Promise.all([
           import('postcss'),
           import('postcss-selector-parser'),
-          result.state.jit ? import('tailwindcss/jit/lib/generateRules') : {},
-          result.state.jit ? import('tailwindcss/jit/lib/setupContext') : {},
           result.state.jit
-            ? import('tailwindcss/jit/lib/expandApplyAtRules')
+            ? import('tailwindcss/lib/jit/lib/generateRules')
+            : {},
+          result.state.jit
+            ? import('tailwindcss/lib/jit/lib/setupContextUtils')
+            : {},
+          result.state.jit
+            ? import('tailwindcss/lib/jit/lib/expandApplyAtRules')
             : {},
           tailwindVersion === '2'
             ? import('tailwindcss/resolveConfig')
             : import('tailwindcss-v1/resolveConfig'),
+          result.state.jit
+            ? import('tailwindcss/lib/jit/lib/setupTrackingContext')
+            : {},
         ])
 
         state = result.state
@@ -175,13 +182,7 @@ addEventListener('message', async (event) => {
         let config = await parseConfig(event.data.config, tailwindVersion)
         state.config = resolveConfig(config)
         if (result.state.jit) {
-          state.jitContext = setupContext({
-            ...config,
-            purge: [VIRTUAL_HTML_FILENAME],
-          })(
-            { opts: { from: VIRTUAL_SOURCE_PATH }, messages: [] },
-            postcss.parse(lastCss)
-          )
+          state.jitContext = createContext(state.config)
         }
       }
       state.variants = getVariants(state)
