@@ -10,6 +10,7 @@ const externals = {
   'fs.realpath': 'self.fsrealpath',
   purgecss: 'self.purgecss',
   chokidar: 'self.chokidar',
+  tmp: 'self.tmp',
   'vscode-emmet-helper-bundled': 'null',
 }
 
