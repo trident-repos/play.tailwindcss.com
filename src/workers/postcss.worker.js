@@ -24,14 +24,11 @@ import './subworkers'
 import { getVariants } from '../utils/getVariants'
 import { parseConfig } from './parseConfig'
 import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
-import { VIRTUAL_HTML_FILENAME, VIRTUAL_SOURCE_PATH } from '../constants'
 import { isObject } from '../utils/object'
 
 const compileWorker = createWorkerQueue(CompileWorker)
 
 let state
-
-let lastCss
 
 addEventListener('message', async (event) => {
   if (event.data.lsp) {
@@ -116,10 +113,6 @@ addEventListener('message', async (event) => {
     }
 
     return postMessage({ _id: event.data._id, result })
-  }
-
-  if (typeof event.data.css !== 'undefined') {
-    lastCss = event.data.css
   }
 
   if (
