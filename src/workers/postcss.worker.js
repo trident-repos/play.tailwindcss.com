@@ -25,6 +25,7 @@ import { getVariants } from '../utils/getVariants'
 import { parseConfig } from './parseConfig'
 import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
 import { VIRTUAL_HTML_FILENAME, VIRTUAL_SOURCE_PATH } from '../constants'
+import { isObject } from '../utils/object'
 
 const compileWorker = createWorkerQueue(CompileWorker)
 
@@ -186,6 +187,9 @@ addEventListener('message', async (event) => {
         }
       }
       state.variants = getVariants(state)
+      state.screens = isObject(state.config.screens)
+        ? Object.keys(state.config.screens)
+        : []
       state.editor.getConfiguration = () => ({
         editor: {
           tabSize: 2,
