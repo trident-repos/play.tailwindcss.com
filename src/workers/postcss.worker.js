@@ -203,6 +203,7 @@ addEventListener('message', async (event) => {
             invalidVariant: 'error',
             invalidConfigPath: 'error',
             invalidTailwindDirective: 'error',
+            recommendedVariantOrder: 'warning',
           },
         },
       })
