@@ -9,8 +9,16 @@ export function getVariants(state) {
       return dlv(node, 'raws.value', node.value)
     }
 
-    return Array.from(state.jitContext.variantMap).reduce(
-      (acc, [variant, [, applyVariant]]) => {
+    let result = {}
+    // [name, [sort, fn]]
+    // [name, [[sort, fn]]]
+    Array.from(state.jitContext.variantMap).forEach(
+      ([variantName, variantFnOrFns]) => {
+        let fns = (Array.isArray(variantFnOrFns[0])
+          ? variantFnOrFns
+          : [variantFnOrFns]
+        ).map(([_sort, fn]) => fn)
+
         let placeholder = '__variant_placeholder__'
 
         let root = state.modules.postcss.module.root({
@@ -51,26 +59,38 @@ export function getVariants(state) {
           return root
         }
 
-        applyVariant({
-          container: root,
-          separator: state.separator,
-          modifySelectors,
-        })
+        let definitions = []
 
-        let definition = root
-          .toString()
-          .replace(`.${escape(`${variant}:${placeholder}`)}`, '&')
-          .replace(/[{}]/g, '')
-          .replace(/\s*\n\s*/g, ' ')
-          .trim()
+        for (let fn of fns) {
+          let container = root.clone()
+          fn({
+            container,
+            separator: state.separator,
+            modifySelectors,
+          })
 
-        return {
-          ...acc,
-          [variant]: definition.includes(placeholder) ? null : definition,
+          container.walkDecls((decl) => {
+            decl.remove()
+          })
+
+          let definition = removeBrackets(
+            container
+              .toString()
+              .replace(`.${escape(`${variantName}:${placeholder}`)}`, '&')
+          )
+            .replace(/\s*\n\s*/g, ' ')
+            .trim()
+
+          if (!definition.includes(placeholder)) {
+            definitions.push(definition)
+          }
         }
-      },
-      {}
+
+        result[variantName] = definitions.join(', ') || null
+      }
     )
+
+    return result
   }
 
   let config = state.config
@@ -108,4 +128,15 @@ export function getVariants(state) {
   })
 
   return variants.reduce((obj, variant) => ({ ...obj, [variant]: null }), {})
+}
+
+function removeBrackets(str) {
+  let result = ''
+  for (let i = 0; i < str.length; i++) {
+    let isBracket = (str[i] === '{' || str[i] === '}') && str[i - 1] !== '\\'
+    if (!isBracket) {
+      result += str[i]
+    }
+  }
+  return result
 }

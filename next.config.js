@@ -10,12 +10,16 @@ const externals = {
   'fs.realpath': 'self.fsrealpath',
   purgecss: 'self.purgecss',
   chokidar: 'self.chokidar',
+  tmp: 'self.tmp',
   'vscode-emmet-helper-bundled': 'null',
 }
 
 const moduleOverrides = {
   colorette: path.resolve(__dirname, 'src/modules/colorette.js'),
   fs: path.resolve(__dirname, 'src/modules/fs.js'),
+  'is-glob': path.resolve(__dirname, 'src/modules/is-glob.js'),
+  'glob-parent': path.resolve(__dirname, 'src/modules/glob-parent.js'),
+  'fast-glob': path.resolve(__dirname, 'src/modules/fast-glob.js'),
 }
 
 function getExternal(context, request, callback) {
@@ -27,7 +31,7 @@ function getExternal(context, request, callback) {
 
 const files = [
   {
-    pattern: /modern-noramlize/,
+    pattern: /modern-normalize/,
     file: require.resolve('modern-normalize'),
   },
   {
@@ -148,7 +152,7 @@ module.exports = withTM({
     })
 
     config.module.rules.push({
-      test: require.resolve('tailwindcss/lib/plugins/preflight.js'),
+      test: /tailwindcss\/lib\/plugins\/preflight\.js/,
       use: [createReadFileReplaceLoader(2)],
     })
 
@@ -159,58 +163,10 @@ module.exports = withTM({
       })
     )
 
-    // there's some node-specific stuff in parse-glob
-    // we don't use globs though so this can be overridden
-    config.module.rules.push({
-      test: require.resolve('parse-glob'),
-      use: [
-        createLoader(function (_source) {
-          return `module.exports = () => ({
-            is: { glob: false },
-          })`
-        }),
-      ],
-    })
-
-    // avoids node-specific stuff
-    // this essentially makes fast-glob return whatever it is passed
-    config.module.rules.push({
-      test: require.resolve('fast-glob'),
-      use: [
-        createLoader(function (_source) {
-          return `module.exports = {
-            sync: (patterns) => [].concat(patterns)
-          }`
-        }),
-      ],
-    })
-
     config.module.rules.push({
       resourceQuery: /version/,
       use: createLoader(function (source) {
         return `{ "version": "${JSON.parse(source).version}" }`
-      }),
-    })
-
-    // https://github.com/tailwindlabs/tailwindcss/pull/4005
-    config.module.rules.push({
-      test: require.resolve('tailwindcss/jit/pluginUtils.js'),
-      use: createLoader(function (source) {
-        return source.replace(
-          `return transform(value).replace(/(?<=^calc\\(.+?)(?<![-+*/(])([-+*/])/g, ' $1 ')`,
-          `
-            value = transform(value)
-
-            if (value.startsWith('calc(')) {
-              // add spaces around operators inside calc() that do not follow an operator or (
-              return value.replace(/[-+*/(]+/g, (match) =>
-                match[0] === '(' ? match : [' ', match[0], ' ', ...match.slice(1)].join('')
-              )
-            }
-
-            return value
-          `
-        )
       }),
     })
 

@@ -67,6 +67,7 @@ type ThemeConfig = Partial<{
   backgroundOpacity: ThemeConfig["opacity"];
   backgroundPosition: ResolvableTo<KeyValuePair>;
   backgroundSize: ResolvableTo<KeyValuePair>;
+  backgroundOrigin: ResolvableTo<KeyValuePair>;
 
   /** Border */
   borderColor: ThemeConfig["colors"];
@@ -82,6 +83,9 @@ type ThemeConfig = Partial<{
 
   /** Cursor */
   cursor: ResolvableTo<KeyValuePair>;
+
+  /** Content */
+  content: ResolvableTo<KeyValuePair>;
 
   /** Divider */
   divideColor: ThemeConfig["borderColor"];
@@ -124,6 +128,7 @@ type ThemeConfig = Partial<{
   /** Input */
   placeholderColor: ThemeConfig["colors"];
   placeholderOpacity: ThemeConfig["opacity"];
+  caretColor: ThemeConfig["colors"];
 
   /** Lists */
   listStyleType: ResolvableTo<KeyValuePair>;

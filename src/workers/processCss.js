@@ -13,6 +13,7 @@ const deps = {
     () => import('tailwindcss'),
     () => import('postcss'),
     () => import('tailwindcss/lib/featureFlags'),
+    () => import('tailwindcss/resolveConfig'),
   ],
 }
 
@@ -31,7 +32,7 @@ export async function processCss(
 ) {
   let jit = false
   const config = klona(configInput)
-  const [tailwindcss, postcss, featureFlags] = (
+  const [tailwindcss, postcss, featureFlags, resolveConfig] = (
     await Promise.all(deps[tailwindVersion].map((x) => x()))
   ).map((x) => x.default || x)
 
@@ -51,9 +52,8 @@ export async function processCss(
 
   let jitContext
   if (jit && !skipIntelliSense) {
-    jitContext = require('tailwindcss/jit/lib/setupContext')(config)(
-      { opts: { from: VIRTUAL_SOURCE_PATH }, messages: [] },
-      postcss.parse(cssInput)
+    jitContext = require('tailwindcss/lib/jit/lib/setupContextUtils').createContext(
+      resolveConfig(config)
     )
   }
 
@@ -62,7 +62,9 @@ export async function processCss(
 
   applyComplexClasses.default = (config, ...args) => {
     if (jit) {
-      return require('tailwindcss/jit/lib/expandApplyAtRules')(jitContext)
+      return require('tailwindcss/lib/jit/lib/expandApplyAtRules').default(
+        jitContext
+      )
     }
 
     let configClone = klona(config)
