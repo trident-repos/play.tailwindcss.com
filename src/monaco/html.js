@@ -17,8 +17,8 @@ export function setupHtmlMode(content, onChange, worker, getEditor) {
 
   disposables.push(
     monaco.languages.registerCompletionItemProvider('html', {
-      triggerCharacters: [' ', '"'],
-      provideCompletionItems: async function (model, position) {
+      triggerCharacters: [' ', '"', ':', '!', '/'],
+      provideCompletionItems: async function (model, position, context) {
         if (!worker.current) return { suggestions: [] }
         const { result } = await requestResponse(worker.current, {
           lsp: {
@@ -27,6 +27,7 @@ export function setupHtmlMode(content, onChange, worker, getEditor) {
             language: 'html',
             uri: HTML_URI,
             position,
+            context,
           },
         })
         return result ? result : { suggestions: [] }

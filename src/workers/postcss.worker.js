@@ -51,10 +51,15 @@ addEventListener('message', async (event) => {
         result = await fallback(
           async () =>
             asMonacoCompletionResult(
-              await doComplete(state, document, {
-                line: event.data.lsp.position.lineNumber - 1,
-                character: event.data.lsp.position.column - 1,
-              })
+              await doComplete(
+                state,
+                document,
+                {
+                  line: event.data.lsp.position.lineNumber - 1,
+                  character: event.data.lsp.position.column - 1,
+                },
+                event.data.lsp.context
+              )
             ),
           []
         )
