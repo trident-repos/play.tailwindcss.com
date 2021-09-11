@@ -1,4 +1,7 @@
 contact_links:
+  - name: Bug Report
+    url: https://github.com/tailwindlabs/play.tailwindcss.com/issues/new
+    about: 'Found a bug in Tailwind Play? Create an issue to report it.'
   - name: Feature Request
     url: https://github.com/tailwindlabs/play.tailwindcss.com/discussions/new?category=ideas
     about: 'Suggest any ideas you have using our discussion forums.'
