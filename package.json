@@ -3,19 +3,22 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build:plugins": "node src/scripts/buildBuiltinPlugins.js",
-    "build": "npm run build:plugins && next build",
+    "build:plugins": "if [ -f './.next/serverless/scripts/buildBuiltinPlugins.js' ]; then node ./.next/serverless/scripts/buildBuiltinPlugins.js; else node ./.next/server/scripts/buildBuiltinPlugins.js; fi",
+    "build": "next build && npm run build:plugins",
     "start": "next start"
   },
   "dependencies": {
     "@ctrl/tinycolor": "^3.1.4",
     "@tailwindcss/custom-forms": "0.2.1",
     "@tailwindcss/forms": "0.3.2",
+    "@tailwindcss/forms-next": "npm:@tailwindcss/forms@0.4.0-alpha.1",
     "@tailwindcss/typography": "0.4.0",
+    "@tailwindcss/typography-next": "npm:@tailwindcss/typography@0.5.0-alpha.1",
     "@tailwindcss/ui": "0.7.2",
     "@typescript-eslint/eslint-plugin": "2.x",
     "@typescript-eslint/parser": "2.x",
-    "autoprefixer": "^9.8.6",
+    "autoprefixer": "10.3.5",
+    "autoprefixer-postcss7": "npm:autoprefixer@9.8.6",
     "babel-eslint": "10.x",
     "babel-plugin-preval": "^5.0.0",
     "clsx": "^1.1.1",
@@ -55,8 +58,9 @@
     "simple-functional-loader": "^1.2.1",
     "string-replace-loader": "^2.3.0",
     "tailwindcss": "2.2.15",
-    "tailwindcss-language-service": "0.0.17",
+    "tailwindcss-language-service": "0.0.21",
     "tailwindcss-v1": "npm:tailwindcss@1.9.6",
+    "tailwindcss-v3": "npm:tailwindcss@3.0.0-alpha.1",
     "vscode-languageserver-textdocument": "^1.0.1",
     "worker-loader": "^3.0.2"
   }

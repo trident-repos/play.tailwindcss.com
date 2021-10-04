@@ -54,6 +54,14 @@ const files = [
       'node_modules/tailwindcss/lib/plugins/css/preflight.css'
     ),
   },
+  {
+    pattern: /preflight/,
+    tailwindVersion: 3,
+    file: path.resolve(
+      __dirname,
+      'node_modules/tailwindcss-v3/lib/css/preflight.css'
+    ),
+  },
 ]
 
 function createReadFileReplaceLoader(tailwindVersion) {
@@ -91,7 +99,7 @@ module.exports = withTM({
       },
     ]
   },
-  webpack: (config, { isServer, webpack }) => {
+  webpack: (config, { isServer, webpack, dev }) => {
     config.resolve.alias = { ...config.resolve.alias, ...moduleOverrides }
 
     config.module.rules
@@ -156,6 +164,11 @@ module.exports = withTM({
       use: [createReadFileReplaceLoader(2)],
     })
 
+    config.module.rules.push({
+      test: /tailwindcss-v3\/lib\/corePlugins\.js/,
+      use: [createReadFileReplaceLoader(3)],
+    })
+
     config.plugins.push(
       new webpack.DefinePlugin({
         'process.env.TAILWIND_MODE': JSON.stringify('build'),
@@ -164,9 +177,26 @@ module.exports = withTM({
     )
 
     config.module.rules.push({
-      resourceQuery: /version/,
+      resourceQuery: /fields/,
       use: createLoader(function (source) {
-        return `{ "version": "${JSON.parse(source).version}" }`
+        let fields = new URLSearchParams(this.resourceQuery)
+          .get('fields')
+          .split(',')
+
+        let res = JSON.stringify(JSON.parse(source), (key, value) => {
+          if (['', ...fields].includes(key)) {
+            if (key === 'main') {
+              return path.relative(
+                path.resolve(__dirname, 'node_modules'),
+                path.resolve(path.dirname(this.resourcePath), value)
+              )
+            }
+            return value
+          }
+          return undefined
+        })
+
+        return res
       }),
     })
 
@@ -192,7 +222,84 @@ module.exports = withTM({
       ],
     })
 
+    let browsers = require('browserslist')([
+      '> 1%',
+      'not edge <= 18',
+      'not ie 11',
+      'not op_mini all',
+    ])
+
+    config.module.rules.push({
+      test: require.resolve('browserslist'),
+      use: [
+        createLoader(function (_source) {
+          return `
+            module.exports = () => (${JSON.stringify(browsers)})
+          `
+        }),
+      ],
+    })
+
+    config.module.rules.push({
+      test: require.resolve('caniuse-lite/dist/unpacker/index.js'),
+      use: [
+        createLoader(function (_source) {
+          let agents = require('caniuse-lite/dist/unpacker/agents.js').agents
+
+          for (let name in agents) {
+            for (let key in agents[name]) {
+              if (key !== 'prefix' && key !== 'prefix_exceptions') {
+                delete agents[name][key]
+              }
+            }
+          }
+
+          let features = require('caniuse-lite').feature(
+            require('caniuse-lite/data/features/css-featurequeries.js')
+          )
+
+          return `
+            export const agents = ${JSON.stringify(agents)}
+            export function feature() {
+              return ${JSON.stringify(features)}
+            }
+          `
+        }),
+      ],
+    })
+
+    config.module.rules.push({
+      test: require.resolve('autoprefixer/data/prefixes.js'),
+      use: [
+        createLoader(function (_source) {
+          let result = require('autoprefixer/data/prefixes.js')
+
+          for (let key in result) {
+            result[key].browsers = result[key].browsers.filter((b) =>
+              browsers.includes(b)
+            )
+            if (result[key].browsers.length === 0) {
+              delete result[key]
+            }
+          }
+
+          return `module.exports = ${JSON.stringify(result)}`
+        }),
+      ],
+    })
+
     config.output.globalObject = 'self'
+
+    if (!dev && isServer) {
+      let originalEntry = config.entry
+
+      config.entry = async () => {
+        const entries = { ...(await originalEntry()) }
+        entries['./scripts/buildBuiltinPlugins'] =
+          './src/scripts/buildBuiltinPlugins.js'
+        return entries
+      }
+    }
 
     return config
   },

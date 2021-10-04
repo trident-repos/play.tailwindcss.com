@@ -1,5 +1,11 @@
-import { PLUGIN_BUILDER_VERSION } from '../constants'
-import colors from 'tailwindcss/colors'
+import { PLUGINS, PLUGIN_BUILDER_VERSION } from '../constants'
+import colors2 from 'tailwindcss/colors'
+import colors3 from 'tailwindcss-v3/colors'
+
+let colors = {
+  2: colors2,
+  3: colors3,
+}
 
 export async function parseConfig(configStr, tailwindVersion) {
   let mod = {}
@@ -26,13 +32,7 @@ export async function parseConfig(configStr, tailwindVersion) {
   const builtinPlugins = {
     _builderVersion: PLUGIN_BUILDER_VERSION,
     _tailwindVersion: tailwindVersion,
-    '@tailwindcss/custom-forms': require('@tailwindcss/custom-forms/package.json?version')
-      .version,
-    '@tailwindcss/forms': require('@tailwindcss/forms/package.json?version')
-      .version,
-    '@tailwindcss/typography': require('@tailwindcss/typography/package.json?version')
-      .version,
-    '@tailwindcss/ui': require('@tailwindcss/ui/package.json?version').version,
+    ...PLUGINS[tailwindVersion],
   }
 
   const before = `(async function(module){
@@ -43,13 +43,17 @@ export async function parseConfig(configStr, tailwindVersion) {
       if (m === '') {
         throw new RequireError("The argument 'id' must be a non-empty string. Received ''", line)
       }
-      if (m === 'tailwindcss/colors') {
-        return ${JSON.stringify(colors)}
+      if (/^tailwindcss\\/colors(\\.js)?$/.test(m)) {
+        ${
+          colors[tailwindVersion]
+            ? `return ${JSON.stringify(colors[tailwindVersion])}`
+            : `throw new RequireError("Cannot find module '" + m + "'", line)`
+        }
       }
       let result
       try {
         const href = builtinPlugins[m]
-          ? '/plugins/' + builtinPlugins._builderVersion + '/v' + builtinPlugins._tailwindVersion + '/' + m + '@' + builtinPlugins[m] + '.js'
+          ? '/plugins/' + builtinPlugins._builderVersion + '/v' + builtinPlugins._tailwindVersion + '/' + m + '@' + builtinPlugins[m].version + '.js'
           : 'https://cdn.skypack.dev/' + m + '?min'
         result = await self.importShim(href)
       } catch (error) {
