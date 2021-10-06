@@ -135,13 +135,15 @@ addEventListener('message', async (event) => {
     const css = event.data._recompile ? lastCss : event.data.css
     const config = event.data._recompile ? lastConfig : event.data.config
 
+    const isFreshBuild = css !== lastCss || config !== lastConfig
+
     lastHtml = html
     lastCss = css
     lastConfig = config
 
     const result = await compileWorker.emit({
       ...event.data,
-      _isNewBuild: css !== lastCss || config !== lastConfig,
+      _isFreshBuild: isFreshBuild,
       html,
       css,
       config,

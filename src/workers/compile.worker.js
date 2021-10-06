@@ -21,7 +21,7 @@ addEventListener('message', async (event) => {
     tailwindVersion = toValidTailwindVersion(event.data.tailwindVersion)
   }
 
-  if (event.data._isNewBuild) {
+  if (event.data._isFreshBuild) {
     self.BUILD_ID++
   }
 
