@@ -1,4 +1,4 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
+import * as monaco from 'monaco-editor'
 import { setupMode } from 'monaco-editor/esm/vs/language/css/cssMode'
 import {
   DiagnosticsAdapter,
@@ -355,19 +355,29 @@ const language = {
     selectorbody: [
       { include: '@comments' },
       [
-        '[*_]?@identifier@ws:(?=(\\s|\\d|[^{;}]*[;}]))',
+        '--@identifier@ws(?=:(\\s|\\d|[^{;}]*[;}]))',
+        'variable',
+        '@rulevaluestart',
+      ],
+      [
+        '[*_]?@identifier@ws(?=:(\\s|\\d|[^{;}]*[;}]))',
         'attribute.name',
-        '@rulevalue',
+        '@rulevaluestart',
       ], // rule definition: to distinguish from a nested selector check for whitespace, number or a semicolon
       ['}', { token: 'delimiter.bracket', next: '@pop' }],
 
       ['[@]apply', { token: 'keyword', next: '@applybody' }],
     ],
 
-    applybody: [{ include: '@selectorname' }, [';', 'delimiter', '@pop']],
+    applybody: [
+      { include: '@comments' },
+      ['!important', 'keyword'],
+      [';', 'delimiter', '@pop'],
+    ],
 
     selectorname: [
-      ['(\\.|#(?=[^{])|%|(@identifier)|:)+', 'tag'], // selector (.foo, div, ...)
+      ['::?(@identifier)', 'pseudo'],
+      ['(\\.|#(?=[^{])|%|(@identifier))+', 'tag'], // selector (.foo, div, ...)
     ],
 
     selectorattribute: [
@@ -380,21 +390,21 @@ const language = {
       [
         '(url-prefix)(\\()',
         [
-          'attribute.value',
+          'function',
           { token: 'delimiter.parenthesis', next: '@urldeclaration' },
         ],
       ],
       [
         '(url)(\\()',
         [
-          'attribute.value',
+          'function',
           { token: 'delimiter.parenthesis', next: '@urldeclaration' },
         ],
       ],
       [
         '(theme)(\\()',
         [
-          'attribute.value',
+          'function',
           { token: 'delimiter.parenthesis', next: '@urldeclaration' },
         ],
       ],
@@ -405,6 +415,7 @@ const language = {
       [',', 'delimiter'],
     ],
 
+    rulevaluestart: [[':', { token: 'delimiter', switchTo: '@rulevalue' }]],
     rulevalue: [
       { include: '@comments' },
       { include: '@strings' },
@@ -474,14 +485,19 @@ const language = {
 
     mediadeclaration: [
       { include: '@comments' },
-      ['\\(', { token: 'delimeter.bracket', next: '@mediaparam' }],
-      ['{', { token: 'delimiter.bracket', switchTo: '@selector' }],
+      [',', { token: 'delimiter' }],
+      ['\\(', { token: 'delimiter.bracket', next: '@mediaparam' }],
+      ['{', { token: 'delimiter.bracket', switchTo: '@mediabody' }],
     ],
     mediaparam: [
       { include: '@comments' },
       { include: '@numbers' },
-      ['@identifier', 'attribute.value'],
+      ['@identifier@ws:', 'attribute.name'],
       ['\\)', 'delimiter.bracket', '@pop'],
+    ],
+    mediabody: [
+      { include: '@selector' },
+      ['}', { token: 'delimiter.bracket', next: '@pop' }],
     ],
 
     tailwinddirective: [
@@ -502,7 +518,7 @@ const language = {
     variantsheader: [
       { include: '@comments' },
       ['@identifier', 'attribute.value'],
-      [',', 'delimeter'],
+      [',', 'delimiter'],
       ['{', { token: 'delimiter.bracket', switchTo: '@selector' }],
     ],
     responsiveheader: [
@@ -517,17 +533,16 @@ const language = {
     ],
 
     functioninvocation: [
-      [
-        '@identifier\\(',
-        { token: 'attribute.value', next: '@functionarguments' },
-      ],
+      ['@identifier(?=\\()', { token: 'function', next: '@functionarguments' }],
     ],
 
     functionarguments: [
+      ['\\(', 'delimiter.parenthesis'],
       ['\\$@identifier@ws:', 'attribute.name'],
       ['[,]', 'delimiter'],
       { include: '@term' },
-      ['\\)', { token: 'attribute.value', next: '@pop' }],
+      { include: '@strings' },
+      ['\\)', { token: 'delimiter.parenthesis', next: '@pop' }],
     ],
 
     strings: [

@@ -1,10 +1,10 @@
-import * as monaco from 'monaco-editor/esm/vs/editor/editor.api'
+import * as monaco from 'monaco-editor'
 import { SuggestAdapter } from 'monaco-editor/esm/vs/language/typescript/languageFeatures'
 import types1 from '!!raw-loader!../monaco/types.d.ts'
 import types2 from '!!raw-loader!../monaco/types-v2.d.ts'
 import types3 from '!!raw-loader!../monaco/types-v3.d.ts'
-import postcssTypes from '!!raw-loader!string-replace-loader?search=\\/\\*.*?\\*\\/&replace=&flags=sg!postcss/lib/postcss.d.ts'
-import sourcemapTypes from '!!raw-loader!postcss/node_modules/source-map/source-map.d.ts'
+import postcssTypes from '!!raw-loader!string-replace-loader?search=\\/\\*.*?\\*\\/&replace=&flags=sg!../../node_modules/postcss/lib/postcss.d.ts'
+import sourcemapTypes from '!!raw-loader!source-map-js/source-map.d.ts'
 import { DiagnosticsAdapter } from 'monaco-editor/esm/vs/language/typescript/languageFeatures'
 
 const CONFIG_URI = 'file:///Config'
@@ -92,7 +92,7 @@ export function setupJavaScriptMode(
         disposables.push(
           monaco.languages.typescript.javascriptDefaults.addExtraLib(
             sourcemapTypes,
-            'file:///node_modules/@types/source-map/index.d.ts'
+            'file:///node_modules/@types/source-map-js/index.d.ts'
           )
         )
 
@@ -149,7 +149,7 @@ export function setupJavaScriptMode(
 
         const _provideCompletionItems =
           SuggestAdapter.prototype.provideCompletionItems
-        SuggestAdapter.prototype.provideCompletionItems = async function (
+        SuggestAdapter.prototype.provideCompletionItems = function (
           originalModel,
           position,
           ...rest
@@ -159,27 +159,28 @@ export function setupJavaScriptMode(
           }
           const lineDelta =
             originalModel === model ? getLineDelta(model, position) : 0
-          const result = await this._provideCompletionItems(
+          return this._provideCompletionItems(
             originalModel === model ? proxyModel : originalModel,
             originalModel === model ? position.delta(lineDelta) : position,
             ...rest
-          )
-          if (!result) return result
-          return {
-            suggestions:
-              originalModel === model
-                ? result.suggestions.map((suggestion) => ({
-                    ...suggestion,
-                    uri: model.uri,
-                    range: new monaco.Range(
-                      suggestion.range.startLineNumber - lineDelta,
-                      suggestion.range.startColumn,
-                      suggestion.range.endLineNumber - lineDelta,
-                      suggestion.range.endColumn
-                    ),
-                  }))
-                : result.suggestions,
-          }
+          ).then((result) => {
+            if (!result) return result
+            return {
+              suggestions:
+                originalModel === model
+                  ? result.suggestions.map((suggestion) => ({
+                      ...suggestion,
+                      uri: model.uri,
+                      range: new monaco.Range(
+                        suggestion.range.startLineNumber - lineDelta,
+                        suggestion.range.startColumn,
+                        suggestion.range.endLineNumber - lineDelta,
+                        suggestion.range.endColumn
+                      ),
+                    }))
+                  : result.suggestions,
+            }
+          })
         }
         disposables.push({
           dispose() {

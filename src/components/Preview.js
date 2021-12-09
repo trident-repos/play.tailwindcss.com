@@ -212,7 +212,7 @@ export const Preview = forwardRef(
 
     return (
       <div
-        className="absolute inset-0 top-10 md:top-0 flex flex-col border-t border-gray-200 dark:border-gray-600 md:border-0 bg-gray-50 dark:bg-black"
+        className="absolute inset-0 top-12 lg:top-0 flex flex-col border-t border-gray-200 dark:border-white/10 lg:border-0 bg-gray-50 dark:bg-black"
         ref={containerRef}
       >
         {responsiveDesignMode && (

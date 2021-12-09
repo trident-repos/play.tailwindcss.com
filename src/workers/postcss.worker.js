@@ -19,7 +19,7 @@ import {
   asCompletionItem as asLspCompletionItem,
   asRange as asLspRange,
 } from '../monaco/monacoToLsp'
-import CompileWorker from 'worker-loader?publicPath=/_next/&filename=static/chunks/[name].[hash].js&chunkFilename=static/chunks/[id].[contenthash].worker.js!./compile.worker.js'
+import CompileWorker from 'worker-loader!./compile.worker.js'
 import { createWorkerQueue } from '../utils/workers'
 import './subworkers'
 import { getVariants } from '../utils/getVariants'
@@ -81,14 +81,19 @@ addEventListener('message', async (event) => {
         )
         break
       case 'resolveCompletionItem':
-        result = await fallback(async () =>
-          asMonacoCompletionItem(
-            await resolveCompletionItem(
-              state,
-              asLspCompletionItem(event.data.lsp.item)
-            )
+        result = await fallback(async () => {
+          let item = await resolveCompletionItem(
+            state,
+            asLspCompletionItem(event.data.lsp.item)
           )
-        )
+          if (item.documentation?.value) {
+            item.documentation.value = item.documentation.value.replace(
+              /^```css/,
+              '```tailwindcss'
+            )
+          }
+          return asMonacoCompletionItem(item)
+        })
         break
       case 'hover':
         result = await fallback(async () => {
@@ -167,26 +172,28 @@ addEventListener('message', async (event) => {
           import('postcss-selector-parser'),
           result.state.jit
             ? tailwindVersion === '2'
-              ? import('tailwindcss/lib/jit/lib/generateRules')
-              : import('tailwindcss-v3/lib/lib/generateRules')
+              ? import('tailwindcss-v2/lib/jit/lib/generateRules')
+              : import('tailwindcss/lib/lib/generateRules')
             : {},
           result.state.jit
             ? tailwindVersion === '2'
-              ? import('tailwindcss/lib/jit/lib/setupContextUtils')
-              : import('tailwindcss-v3/lib/lib/setupContextUtils')
+              ? import('tailwindcss-v2/lib/jit/lib/setupContextUtils')
+              : import('tailwindcss/lib/lib/setupContextUtils')
             : {},
           result.state.jit
             ? tailwindVersion === '2'
-              ? import('tailwindcss/lib/jit/lib/expandApplyAtRules')
-              : import('tailwindcss-v3/lib/lib/expandApplyAtRules')
+              ? import('tailwindcss-v2/lib/jit/lib/expandApplyAtRules')
+              : import('tailwindcss/lib/lib/expandApplyAtRules')
             : {},
           tailwindVersion === '2'
-            ? import('tailwindcss/resolveConfig')
+            ? import('tailwindcss-v2/resolveConfig')
             : tailwindVersion === '3'
-            ? import('tailwindcss-v3/resolveConfig')
+            ? import('tailwindcss/resolveConfig')
             : import('tailwindcss-v1/resolveConfig'),
           result.state.jit
-            ? import('tailwindcss/lib/jit/lib/setupTrackingContext')
+            ? tailwindVersion === '2'
+              ? import('tailwindcss-v2/lib/jit/lib/setupTrackingContext')
+              : import('tailwindcss/lib/lib/setupTrackingContext')
             : {},
         ])
 
@@ -213,6 +220,7 @@ addEventListener('message', async (event) => {
           if (state.jitContext.getClassList) {
             state.classList = state.jitContext
               .getClassList()
+              .filter((className) => className !== '*')
               .map((className) => {
                 return [className, { color: getColor(state, className) }]
               })

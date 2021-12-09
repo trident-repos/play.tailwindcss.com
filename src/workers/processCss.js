@@ -10,23 +10,23 @@ const deps = {
     () => import('tailwindcss-v1/lib/featureFlags'),
   ],
   2: [
+    () => import('tailwindcss-v2'),
+    () => import('postcss'),
+    () => import('autoprefixer'),
+    () => import('tailwindcss-v2/lib/featureFlags'),
+    () => import('tailwindcss-v2/resolveConfig'),
+  ],
+  3: [
     () => import('tailwindcss'),
     () => import('postcss'),
     () => import('autoprefixer'),
     () => import('tailwindcss/lib/featureFlags'),
     () => import('tailwindcss/resolveConfig'),
   ],
-  3: [
-    () => import('tailwindcss-v3'),
-    () => import('postcss'),
-    () => import('autoprefixer'),
-    () => import('tailwindcss-v3/lib/featureFlags'),
-    () => import('tailwindcss-v3/resolveConfig'),
-  ],
 }
 
 const applyModule1 = require('tailwindcss-v1/lib/flagged/applyComplexClasses')
-const applyModule2 = require('tailwindcss/lib/lib/substituteClassApplyAtRules')
+const applyModule2 = require('tailwindcss-v2/lib/lib/substituteClassApplyAtRules')
 
 const apply1 = applyModule1.default
 const apply2 = applyModule2.default
@@ -67,7 +67,7 @@ export async function processCss(
 
   let jitContext
   if (jit && !skipIntelliSense) {
-    jitContext = require('tailwindcss/lib/jit/lib/setupContextUtils').createContext(
+    jitContext = require('tailwindcss-v2/lib/jit/lib/setupContextUtils').createContext(
       resolveConfig(config)
     )
   }
@@ -77,13 +77,13 @@ export async function processCss(
 
   applyComplexClasses.default = (config, ...args) => {
     if (tailwindVersion === '3') {
-      return require('tailwindcss-v3/lib/lib/expandApplyAtRules').default(
+      return require('tailwindcss/lib/lib/expandApplyAtRules').default(
         jitContext
       )
     }
 
     if (jit) {
-      return require('tailwindcss/lib/jit/lib/expandApplyAtRules').default(
+      return require('tailwindcss-v2/lib/jit/lib/expandApplyAtRules').default(
         jitContext
       )
     }
@@ -172,8 +172,8 @@ export async function processCss(
       tailwindVersion === '1'
         ? require('tailwindcss-v1/package.json?fields=version').version
         : tailwindVersion === '2'
-        ? require('tailwindcss/package.json?fields=version').version
-        : require('tailwindcss-v3/package.json?fields=version').version
+        ? require('tailwindcss-v2/package.json?fields=version').version
+        : require('tailwindcss/package.json?fields=version').version
     state.editor = {
       userLanguages: {},
       capabilities: {},

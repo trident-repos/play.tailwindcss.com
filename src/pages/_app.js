@@ -4,9 +4,14 @@ import Head from 'next/head'
 const TITLE = 'Tailwind Play'
 const DESCRIPTION =
   "An advanced online playground for Tailwind CSS that lets you use all of Tailwind's build-time features directly in the browser."
+const FAVICON_VERSION = 3
 
 if (typeof window !== 'undefined') {
   require('../workers/subworkers')
+}
+
+function v(href) {
+  return `${href}?v=${FAVICON_VERSION}`
 }
 
 export default function App({ Component, pageProps }) {
@@ -16,23 +21,36 @@ export default function App({ Component, pageProps }) {
         <link
           rel="apple-touch-icon"
           sizes="180x180"
-          href="/apple-touch-icon.png"
+          href={v('/favicons/apple-touch-icon.png')}
         />
         <link
           rel="icon"
           type="image/png"
           sizes="32x32"
-          href="/favicon-32x32.png"
+          href={v('/favicons/favicon-32x32.png')}
         />
         <link
           rel="icon"
           type="image/png"
           sizes="16x16"
-          href="/favicon-16x16.png"
+          href={v('/favicons/favicon-16x16.png')}
         />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="mask-icon" href="/safari-pinned-tab.svg" color="#00b4b6" />
+        <link rel="manifest" href={v('/favicons/site.webmanifest')} />
+        <link
+          rel="mask-icon"
+          href={v('/favicons/safari-pinned-tab.svg')}
+          color="#38bdf8"
+        />
+        <link rel="shortcut icon" href={v('/favicons/favicon.ico')} />
+        <meta name="apple-mobile-web-app-title" content="Tailwind Play" />
+        <meta name="application-name" content="Tailwind Play" />
+        <meta name="msapplication-TileColor" content="#38bdf8" />
+        <meta
+          name="msapplication-config"
+          content={v('/favicons/browserconfig.xml')}
+        />
         <meta name="theme-color" content="#ffffff" />
+
         <title>{TITLE}</title>
         <meta content={DESCRIPTION} name="description" />
         <meta property="og:type" content="website" />

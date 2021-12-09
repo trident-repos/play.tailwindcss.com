@@ -9,11 +9,11 @@ const versions = {
     plugins: PLUGINS[1],
   },
   v2: {
-    tailwindcss: 'tailwindcss',
+    tailwindcss: 'tailwindcss-v2',
     plugins: PLUGINS[2],
   },
   v3: {
-    tailwindcss: 'tailwindcss-v3',
+    tailwindcss: 'tailwindcss',
     plugins: PLUGINS[3],
   },
 }

@@ -1,12 +1,11 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import { useIsomorphicLayoutEffect } from '../hooks/useIsomorphicLayoutEffect'
-import Worker from 'worker-loader?publicPath=/_next/&filename=static/chunks/[name].[hash].js&chunkFilename=static/chunks/[id].[contenthash].worker.js!../workers/postcss.worker.js'
+import Worker from 'worker-loader!../workers/postcss.worker.js'
 import { requestResponse } from '../utils/workers'
 import { debounce } from 'debounce'
 import { Editor } from '../components/Editor'
 import SplitPane from 'react-split-pane'
 import useMedia from 'react-use/lib/useMedia'
-import defaultContent from '../preval/defaultContent'
 import { validateJavaScript } from '../utils/validateJavaScript'
 import { useDebouncedState } from '../hooks/useDebouncedState'
 import { Preview } from '../components/Preview'
@@ -21,6 +20,7 @@ import { getLayoutQueryString } from '../utils/getLayoutQueryString'
 import { get } from '../utils/database'
 import { toValidTailwindVersion } from '../utils/toValidTailwindVersion'
 import Head from 'next/head'
+import { getDefaultContent } from '../utils/getDefaultContent'
 
 const HEADER_HEIGHT = 60 - 1
 const TAB_BAR_HEIGHT = 40
@@ -42,7 +42,7 @@ function Pen({
   const [activePane, setActivePane] = useState(
     initialLayout === 'preview' ? 'preview' : 'editor'
   )
-  const isMd = useMedia('(min-width: 768px)')
+  const isLg = useMedia('(min-width: 1024px)')
   const [dirty, setDirty] = useState(false)
   const [renderEditor, setRenderEditor] = useState(false)
   const [
@@ -183,7 +183,7 @@ function Pen({
             ? document.documentElement.clientHeight - HEADER_HEIGHT
             : document.documentElement.clientWidth
 
-        if (isMd && size.layout !== 'preview') {
+        if (isLg && size.layout !== 'preview') {
           const min = size.layout === 'vertical' ? 320 : 320 + TAB_BAR_HEIGHT
           const max =
             size.layout === 'vertical'
@@ -202,8 +202,8 @@ function Pen({
         }
 
         const newSize =
-          (isMd && size.layout !== 'preview') ||
-          (!isMd && activePane === 'editor')
+          (isLg && size.layout !== 'preview') ||
+          (!isLg && activePane === 'editor')
             ? windowSize
             : 0
 
@@ -220,17 +220,17 @@ function Pen({
     return () => {
       window.removeEventListener('resize', updateSize)
     }
-  }, [isMd, setSize, size.layout, activePane])
+  }, [isLg, setSize, size.layout, activePane])
 
   useEffect(() => {
-    if (isMd) {
+    if (isLg) {
       if (size.layout !== 'preview') {
         setRenderEditor(true)
       }
     } else if (activePane === 'editor') {
       setRenderEditor(true)
     }
-  }, [activePane, isMd, size.layout])
+  }, [activePane, isLg, size.layout])
 
   useEffect(() => {
     if (resizing) {
@@ -285,11 +285,6 @@ function Pen({
   useEffect(() => {
     setActiveTab(initialActiveTab)
   }, [initialActiveTab])
-
-  const isDefaultContent =
-    initialContent.html === defaultContent.html &&
-    initialContent.css === defaultContent.css &&
-    initialContent.config === defaultContent.config
 
   return (
     <>
@@ -347,15 +342,15 @@ function Pen({
       <main className="flex-auto relative border-t border-gray-200 dark:border-gray-800">
         {initialContent && typeof size.current !== 'undefined' ? (
           <>
-            {(!isMd || size.layout !== 'preview') && (
+            {(!isLg || size.layout !== 'preview') && (
               <TabBar
                 width={
-                  size.layout === 'vertical' && isMd ? size.current : '100%'
+                  size.layout === 'vertical' && isLg ? size.current : '100%'
                 }
                 isLoading={isLoading}
-                showPreviewTab={!isMd}
+                showPreviewTab={!isLg}
                 activeTab={
-                  isMd || activePane === 'editor' ? activeTab : 'preview'
+                  isLg || activePane === 'editor' ? activeTab : 'preview'
                 }
                 onChange={(tab) => {
                   if (tab === 'preview') {
@@ -377,14 +372,14 @@ function Pen({
               pane1Style={{ display: 'flex', flexDirection: 'column' }}
               onDragStarted={() => setResizing(true)}
               onDragFinished={() => setResizing(false)}
-              allowResize={isMd && size.layout !== 'preview'}
+              allowResize={isLg && size.layout !== 'preview'}
               resizerClassName={
-                isMd && size.layout !== 'preview'
+                isLg && size.layout !== 'preview'
                   ? 'Resizer'
                   : 'Resizer-collapsed'
               }
             >
-              <div className="border-t border-gray-200 dark:border-gray-800 mt-10 flex-auto flex">
+              <div className="border-t border-gray-200 dark:border-white/10 mt-12 flex-auto flex">
                 {renderEditor && (
                   <Editor
                     editorRef={(ref) => (editorRef.current = ref)}
@@ -399,15 +394,15 @@ function Pen({
               <div className="absolute inset-0 w-full h-full">
                 <Preview
                   ref={previewRef}
-                  responsiveDesignMode={isMd && responsiveDesignMode}
+                  responsiveDesignMode={isLg && responsiveDesignMode}
                   responsiveSize={responsiveSize}
                   onChangeResponsiveSize={setResponsiveSize}
                   iframeClassName={resizing ? 'pointer-events-none' : ''}
                   onLoad={() => {
                     inject({
                       html: initialContent.html,
-                      ...(isDefaultContent
-                        ? { css: defaultContent.compiledCss }
+                      ...(initialContent.compiledCss
+                        ? { css: initialContent.compiledCss }
                         : {}),
                     })
                     compileNow({
@@ -458,7 +453,7 @@ export async function getServerSideProps({ params, res, query }) {
     )
     return {
       props: {
-        initialContent: defaultContent,
+        initialContent: await getDefaultContent(),
         ...layoutProps,
       },
     }

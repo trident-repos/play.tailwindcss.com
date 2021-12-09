@@ -129,13 +129,20 @@ export function Share({
       <button
         type="button"
         className={clsx(
-          'relative flex-none rounded-md border border-gray-200 text-sm font-medium leading-5 py-1.5 px-2 lg:px-4 focus:border-turquoise-400 focus:outline-none focus:shadow-outline dark:bg-gray-800 dark:border-transparent dark:focus:bg-gray-700 dark:focus:border-turquoise-500',
+          'relative flex-none rounded-md text-sm font-semibold leading-6 py-1.5 px-3',
           {
-            'opacity-50': state === 'disabled',
+            'bg-sky-500/40 text-white dark:bg-gray-800 dark:text-white/40':
+              state === 'disabled',
             'cursor-auto':
               state === 'disabled' || state === 'copied' || state === 'loading',
-            'hover:bg-gray-50 dark:hover:bg-gray-700':
+            'hover:bg-sky-400':
               state !== 'disabled' && state !== 'copied' && state !== 'loading',
+            'bg-sky-500 text-white': state === 'idle' || state === 'loading',
+            'text-sky-500 shadow-copied dark:bg-sky-500/10': state === 'copied',
+            'shadow-sm': state !== 'copied',
+            'dark:shadow-none': state === 'disabled',
+            'dark:shadow-highlight/20':
+              state !== 'copied' && state !== 'disabled',
           }
         )}
         onClick={() => {
@@ -179,7 +186,7 @@ export function Share({
           </svg>
         </span>
         <span
-          className={clsx('text-teal-600', { invisible: state !== 'copied' })}
+          className={clsx({ invisible: state !== 'copied' })}
           aria-hidden={state === 'copied' ? 'false' : 'true'}
         >
           Copied!
@@ -197,7 +204,7 @@ export function Share({
       {(state === 'copied' || state === 'disabled') && path && (
         <button
           type="button"
-          className="group flex-auto min-w-0 flex items-center space-x-1.5 text-sm leading-5 font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+          className="flex-auto min-w-0 flex items-center space-x-2 text-sm leading-6 font-semibold text-gray-500 hover:text-gray-900 dark:text-gray-300 dark:hover:text-white"
           title={`https://play.tailwindcss.com${path}`}
           onClick={() => {
             navigator.clipboard
@@ -210,18 +217,21 @@ export function Share({
               })
           }}
         >
-          <span className="truncate">{path}</span>
           <svg
-            width="20"
-            height="20"
-            className="flex-none fill-current opacity-0 group-hover:opacity-100 group-focus:opacity-100"
+            width="26"
+            height="22"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="flex-none text-gray-300 dark:text-gray-500"
+            aria-hidden="true"
           >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M10 4.5H6A1.5 1.5 0 004.5 6v4A1.5 1.5 0 006 11.5h1V10a3 3 0 013-3h1.5V6A1.5 1.5 0 0010 4.5zM13 7V6a3 3 0 00-3-3H6a3 3 0 00-3 3v4a3 3 0 003 3h1v1a3 3 0 003 3h4a3 3 0 003-3v-4a3 3 0 00-3-3h-1zm-3 1.5h4a1.5 1.5 0 011.5 1.5v4a1.5 1.5 0 01-1.5 1.5h-4A1.5 1.5 0 018.5 14v-4A1.5 1.5 0 0110 8.5z"
-            />
+            <path d="M14.652 12c1.885-1.844 1.75-4.548-.136-6.392l-1.275-1.225c-1.885-1.844-4.942-1.844-6.827 0a4.647 4.647 0 0 0 0 6.676l.29.274" />
+            <path d="M11.348 10c-1.885 1.844-1.75 4.549.136 6.392l1.275 1.225c1.885 1.844 4.942 1.844 6.827 0a4.647 4.647 0 0 0 0-6.676l-.29-.274" />
           </svg>
+          <span className="truncate">...{path}</span>
         </button>
       )}
     </div>

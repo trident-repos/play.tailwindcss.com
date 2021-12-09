@@ -9,9 +9,10 @@ export function TabBar({
 }) {
   return (
     <div
-      className="flex items-center flex-none pl-5 pr-4 sm:pl-6 absolute z-10 top-0 left-0 -mt-px"
+      className="flex items-center flex-none pl-5 pr-4 sm:pl-6 absolute z-10 top-0 left-0 -mb-px antialiased"
       style={{
         width,
+        fontFeatureSettings: '"cv02", "cv03", "cv04", "cv11"',
       }}
     >
       <div className="flex space-x-5">
@@ -71,15 +72,21 @@ function TabButton({ isActive, onClick, children }) {
     <button
       type="button"
       className={clsx(
-        'flex text-xs leading-4 font-medium px-0.5 border-t-2 focus:outline-none transition-colors duration-150',
+        'relative flex py-3 text-sm leading-6 font-semibold focus:outline-none',
         {
-          'border-turquoise-500 text-gray-900 dark:text-white': isActive,
-          'border-transparent text-gray-500 hover:text-gray-900 focus:text-gray-900 dark:text-gray-400 dark:hover:text-white': !isActive,
+          'text-sky-500': isActive,
+          'text-gray-700 hover:text-gray-900 focus:text-gray-900 dark:text-gray-300 dark:hover:text-white': !isActive,
         }
       )}
       onClick={onClick}
     >
-      <span className="border-b-2 border-transparent py-2.5">{children}</span>
+      <span
+        className={clsx(
+          'absolute bottom-0 inset-x-0 bg-sky-500 h-0.5 rounded-full transition-opacity duration-150',
+          { 'opacity-0': !isActive }
+        )}
+      />
+      {children}
     </button>
   )
 }
