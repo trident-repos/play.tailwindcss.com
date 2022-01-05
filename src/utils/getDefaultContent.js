@@ -19,7 +19,7 @@ export async function getDefaultContent() {
   <div class="absolute inset-0 bg-[url(/img/grid.svg)] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))]"></div>
   <div class="relative px-6 pt-10 pb-8 bg-white shadow-xl ring-1 ring-gray-900/5 sm:max-w-lg sm:mx-auto sm:rounded-lg sm:px-10">
     <div class="max-w-md mx-auto">
-      <img src="/img/logo.svg" class="h-6" alt="Tailwind play" />
+      <img src="/img/logo.svg" class="h-6" alt="Tailwind Play" />
       <div class="divide-y divide-gray-300/50">
         <div class="py-8 text-base leading-7 space-y-6 text-gray-600">
           <p>An advanced online playground for Tailwind CSS, including support for things like:</p>
