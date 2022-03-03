@@ -1,4 +1,5 @@
 import * as monaco from 'monaco-editor'
+import { CommandsRegistry } from 'monaco-editor/esm/vs/platform/commands/common/commands'
 import PrettierWorker from 'worker-loader!../workers/prettier.worker.js'
 import { createWorkerQueue } from '../utils/workers'
 import { setupHtmlMode } from './html'
@@ -276,12 +277,18 @@ export function createMonacoEditor({
 }
 
 function setupKeybindings(editor) {
+  let formatCommandId = 'editor.action.formatDocument'
   editor._standaloneKeybindingService.addDynamicKeybinding(
-    '-editor.action.formatDocument'
+    `-${formatCommandId}`,
+    null,
+    () => {}
   )
+  const { handler, when } = CommandsRegistry.getCommand(formatCommandId)
   editor._standaloneKeybindingService.addDynamicKeybinding(
-    'editor.action.formatDocument',
-    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S
+    formatCommandId,
+    monaco.KeyMod.CtrlCmd | monaco.KeyCode.KEY_S,
+    handler,
+    when
   )
 }
 

@@ -127,7 +127,7 @@ export function setupJavaScriptMode(
         model = monaco.editor.createModel(
           content || '',
           'javascript',
-          CONFIG_URI
+          monaco.Uri.parse(CONFIG_URI)
         )
         model.updateOptions({ indentSize: 2, tabSize: 2 })
         disposables.push(model)
@@ -184,7 +184,8 @@ export function setupJavaScriptMode(
         }
         disposables.push({
           dispose() {
-            SuggestAdapter.prototype.provideCompletionItems = _provideCompletionItems
+            SuggestAdapter.prototype.provideCompletionItems =
+              _provideCompletionItems
           },
         })
       }

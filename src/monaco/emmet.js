@@ -116,9 +116,10 @@ export function setupEmmet(worker) {
     })
   }
 
-  const emmet = emmetHTML()
+  const emmet = emmetHTML(monaco)
 
-  monaco.languages.registerCompletionItemProvider = _registerCompletionItemProvider
+  monaco.languages.registerCompletionItemProvider =
+    _registerCompletionItemProvider
 
   return emmet
 }

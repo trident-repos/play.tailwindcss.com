@@ -6,12 +6,14 @@ import {
   DocumentColorAdapter,
   HoverAdapter,
 } from 'monaco-editor/esm/vs/language/css/languageFeatures'
-import { LanguageServiceDefaultsImpl } from 'monaco-editor/esm/vs/language/css/monaco.contribution'
+import { cssDefaults } from 'monaco-editor/esm/vs/language/css/monaco.contribution'
 import * as cssService from 'monaco-editor/esm/vs/language/css/_deps/vscode-css-languageservice/cssLanguageService'
 import { supplementMarkers } from './supplementMarkers'
 import { renderColorDecorators } from './renderColorDecorators'
 import { requestResponse } from '../utils/workers'
 import { debounce } from 'debounce'
+
+cssDefaults._languageId = 'tailwindcss'
 
 const CSS_URI = 'file:///CSS'
 const CSS_PROXY_URI = 'file:///CSS.proxy'
@@ -39,15 +41,7 @@ export function setupCssMode(content, onChange, worker, getEditor) {
           )
         )
 
-        disposables.push(
-          setupMode(
-            new LanguageServiceDefaultsImpl(
-              'tailwindcss',
-              diagnosticsOptions,
-              modeConfiguration
-            )
-          )
-        )
+        disposables.push(setupMode(cssDefaults))
 
         const _provideCompletionItems =
           CompletionAdapter.prototype.provideCompletionItems
@@ -65,7 +59,8 @@ export function setupCssMode(content, onChange, worker, getEditor) {
         }
         disposables.push({
           dispose() {
-            CompletionAdapter.prototype.provideCompletionItems = _provideCompletionItems
+            CompletionAdapter.prototype.provideCompletionItems =
+              _provideCompletionItems
           },
         })
 
@@ -85,7 +80,8 @@ export function setupCssMode(content, onChange, worker, getEditor) {
         }
         disposables.push({
           dispose() {
-            DocumentColorAdapter.prototype.provideDocumentColors = _provideDocumentColors
+            DocumentColorAdapter.prototype.provideDocumentColors =
+              _provideDocumentColors
           },
         })
 
@@ -180,7 +176,11 @@ export function setupCssMode(content, onChange, worker, getEditor) {
           })
         )
 
-        model = monaco.editor.createModel(content || '', 'tailwindcss', CSS_URI)
+        model = monaco.editor.createModel(
+          content || '',
+          'tailwindcss',
+          monaco.Uri.parse(CSS_URI)
+        )
         model.updateOptions({ indentSize: 2, tabSize: 2 })
         disposables.push(model)
 
@@ -564,44 +564,6 @@ const language = {
       ['.', 'string'],
     ],
   },
-}
-
-const diagnosticsOptions = {
-  validate: true,
-  lint: {
-    compatibleVendorPrefixes: 'ignore',
-    vendorPrefix: 'warning',
-    duplicateProperties: 'warning',
-    emptyRules: 'warning',
-    importStatement: 'ignore',
-    boxModel: 'ignore',
-    universalSelector: 'ignore',
-    zeroUnits: 'ignore',
-    fontFaceProperties: 'warning',
-    hexColorLength: 'error',
-    argumentsInColorFunction: 'error',
-    unknownProperties: 'warning',
-    ieHack: 'ignore',
-    unknownVendorSpecificProperties: 'ignore',
-    propertyIgnoredDueToDisplay: 'warning',
-    important: 'ignore',
-    float: 'ignore',
-    idSelector: 'ignore',
-  },
-}
-
-const modeConfiguration = {
-  completionItems: true,
-  hovers: true,
-  documentSymbols: true,
-  definitions: true,
-  references: true,
-  documentHighlights: true,
-  rename: true,
-  colors: true,
-  foldingRanges: true,
-  diagnostics: true,
-  selectionRanges: true,
 }
 
 function toSeverity(lsSeverity) {
