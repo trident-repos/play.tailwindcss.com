@@ -27,13 +27,13 @@ type BaseConfig = {
 };
 
 type PurgeConfig =
-  /** Disabled */
+  // Disabled
   | false
-  /** Shortcut, list of content paths */
+  // Shortcut, list of content paths
   | string[]
-  /** Explicit enabled/disabled + content paths */
+  // Explicit enabled/disabled + content paths
   | { enabled: boolean; mode: "all" | "conservative"; content: string[] }
-  /** Explicit enabled/disabled + purge options */
+  // Explicit enabled/disabled + purge options
   | { enabled: boolean; options: { content: string[]; whitelist: string[] } };
 
 type FutureConfig = "all" | Record<any, never> | [];
@@ -51,16 +51,16 @@ type DarkModeConfig =
 type ThemeConfig = Partial<{
   extend: Partial<Omit<ThemeConfig, "extend">>;
 
-  /** Responsiveness */
+  // Responsiveness
   screens: ResolvableTo<KeyValuePair>;
 
-  /** Reusable base configs */
+  // Reusable base configs
   colors: ResolvableTo<
     KeyValuePair | Record<string, Record<string | number, string>>
   >;
   spacing: ResolvableTo<KeyValuePair>;
 
-  /** Background */
+  // Background
   backgroundColor: ThemeConfig["colors"];
   backgroundImage: ResolvableTo<KeyValuePair>;
   gradientColorStops: ThemeConfig["colors"];
@@ -69,45 +69,45 @@ type ThemeConfig = Partial<{
   backgroundSize: ResolvableTo<KeyValuePair>;
   backgroundOrigin: ResolvableTo<KeyValuePair>;
 
-  /** Border */
+  // Border
   borderColor: ThemeConfig["colors"];
   borderOpacity: ThemeConfig["opacity"];
   borderRadius: ResolvableTo<KeyValuePair>;
   borderWidth: ResolvableTo<KeyValuePair>;
 
-  /** Shadow */
+  // Shadow
   boxShadow: ResolvableTo<KeyValuePair>;
 
-  /** Outline */
+  // Outline
   outline: ResolvableTo<KeyValuePair>;
 
-  /** Cursor */
+  // Cursor
   cursor: ResolvableTo<KeyValuePair>;
 
-  /** Content */
+  // Content
   content: ResolvableTo<KeyValuePair>;
 
-  /** Divider */
+  // Divider
   divideColor: ThemeConfig["borderColor"];
   divideOpacity: ThemeConfig["borderOpacity"];
   devideWidth: ThemeConfig["borderWidth"];
 
-  /** Svg */
+  // Svg
   fill: ResolvableTo<KeyValuePair>;
   stroke: ResolvableTo<KeyValuePair>;
   strokeWidth: ResolvableTo<KeyValuePair>;
 
-  /** Flexbox */
+  // Flexbox
   flex: ResolvableTo<KeyValuePair>;
   flexGrow: ResolvableTo<KeyValuePair>;
   flexShrink: ResolvableTo<KeyValuePair>;
 
-  /** Fonts */
+  // Fonts
   fontFamily: ResolvableTo<Record<string, string[]>>;
   fontSize: ResolvableTo<KeyValuePair>;
   fontWeight: ResolvableTo<KeyValuePair>;
 
-  /** Sizes */
+  // Sizes
   height: ThemeConfig["spacing"];
   minHeight: ResolvableTo<KeyValuePair>;
   maxHeight: ResolvableTo<KeyValuePair>;
@@ -115,35 +115,35 @@ type ThemeConfig = Partial<{
   minWidth: ResolvableTo<KeyValuePair>;
   maxWidth: ResolvableTo<KeyValuePair>;
 
-  /** Positioning */
+  // Positioning
   inset: ResolvableTo<KeyValuePair>;
   zIndex: ResolvableTo<KeyValuePair>;
 
-  /** Text */
+  // Text
   letterSpacing: ResolvableTo<KeyValuePair>;
   lineHeight: ResolvableTo<KeyValuePair>;
   textColor: ThemeConfig["colors"];
   textOpacity: ThemeConfig["opacity"];
 
-  /** Input */
+  // Input
   placeholderColor: ThemeConfig["colors"];
   placeholderOpacity: ThemeConfig["opacity"];
   caretColor: ThemeConfig["colors"];
 
-  /** Lists */
+  // Lists
   listStyleType: ResolvableTo<KeyValuePair>;
 
-  /** Layout */
+  // Layout
   margin: ThemeConfig["spacing"];
   padding: ThemeConfig["spacing"];
   space: ThemeConfig["spacing"];
   opacity: ResolvableTo<KeyValuePair>;
   order: ResolvableTo<KeyValuePair>;
 
-  /** Images */
+  // Images
   objectPosition: ResolvableTo<KeyValuePair>;
 
-  /** Grid */
+  // Grid
   gap: ThemeConfig["spacing"];
   gridTemplateColumns: ResolvableTo<KeyValuePair>;
   gridColumn: ResolvableTo<KeyValuePair>;
@@ -154,26 +154,26 @@ type ThemeConfig = Partial<{
   gridRowStart: ResolvableTo<KeyValuePair>;
   gridRowEnd: ResolvableTo<KeyValuePair>;
 
-  /** Transformations */
+  // Transformations
   transformOrigin: ResolvableTo<KeyValuePair>;
   scale: ResolvableTo<KeyValuePair>;
   rotate: ResolvableTo<KeyValuePair>;
   translate: ThemeConfig["spacing"];
   skew: ResolvableTo<KeyValuePair>;
 
-  /** Transitions */
+  // Transitions
   transitionProperty: ResolvableTo<KeyValuePair>;
   transitionTimingFunction: ResolvableTo<KeyValuePair>;
   transitionDuration: ResolvableTo<KeyValuePair>;
   transitionDelay: ResolvableTo<KeyValuePair>;
 
-  /** Animations */
+  // Animations
   animation: ResolvableTo<KeyValuePair>;
   keyframes: ResolvableTo<
     Record<string, Record<string, KeyValuePair | string>>
   >;
 
-  /** Filters */
+  // Filters
   blur: ResolvableTo<Record<string, string | string[]>>;
   brightness: ResolvableTo<Record<string, string | string[]>>;
   contrast: ResolvableTo<Record<string, string | string[]>>;
@@ -194,19 +194,19 @@ type ThemeConfig = Partial<{
   backdropSaturate: ResolvableTo<Record<string, string | string[]>>;
   backdropSepia: ResolvableTo<Record<string, string | string[]>>;
 
-  /** Components */
+  // Components
   container: Partial<{
     screens:
-      | string[] /** List of breakpoints. E.g.: '400px', '500px' */
-      /** Named breakpoints. E.g.: { sm: '400px' } */
+      | string[] // List of breakpoints. E.g.: '400px', '500px'
+      // Named breakpoints. E.g.: { sm: '400px' }
       | Record<string, string>
-      /** Name breakpoints with explicit min and max values. E.g.: { sm: { min: '300px', max: '400px' } } */
+      // Name breakpoints with explicit min and max values. E.g.: { sm: { min: '300px', max: '400px' } }
       | Record<string, { min: string; max: string }>;
     center: boolean;
     padding: string | KeyValuePair;
   }>;
 
-  /** Custom */
+  // Custom
   [key: string]: any;
 }>;
 
@@ -231,14 +231,14 @@ type VariantConfig =
       respectImportant: false;
     }>;
 type PluginAPI = {
-  /** Get access to the whole config */
+  // Get access to the whole config
   config: <TDefaultValue = TailwindConfig>(
     path?: ConfigDotNotationPath,
     defaultValue?: TDefaultValue
   ) => TDefaultValue; // TODO: Or return value at path
-  /** Escape classNames */
+  // Escape classNames
   e: (className: string) => string;
-  /** Shortcut for the theme section of the config */
+  // Shortcut for the theme section of the config
   theme: <TDefaultValue>(
     path: ConfigDotNotationPath,
     defaultValue: TDefaultValue
@@ -249,12 +249,12 @@ type PluginAPI = {
   ) => TDefaultValue; // TODO: Or return value at path
   target: (path: ConfigDotNotationPath) => string;
   prefix: (selector: string) => string;
-  /** Ability to add utilities. E.g.: .p-4 */
+  // Ability to add utilities. E.g.: .p-4
   addUtilities: (
     utilities: Record<string, KeyValuePair | Record<string, KeyValuePair>>,
     variantConfig?: VariantConfig
   ) => void;
-  /** Ability to add components. E.g.: .btn */
+  // Ability to add components. E.g.: .btn
   addComponents: (
     components: Record<string, KeyValuePair | Record<string, KeyValuePair>>,
     variantConfig?: VariantConfig
@@ -283,7 +283,7 @@ type PluginAPI = {
 export type PluginCreator = (api: PluginAPI) => void;
 type PluginsConfig = (PluginCreator | { handler: PluginCreator, config?: TailwindConfig })[];
 
-/** The holy grail Tailwind config definition */
+// The holy grail Tailwind config definition
 export type TailwindConfig = Partial<
   BaseConfig & {
     presets: TailwindConfig[];
@@ -296,7 +296,7 @@ export type TailwindConfig = Partial<
     corePlugins: CorePluginsConfig;
     plugins: PluginsConfig;
     mode: 'jit' | 'aot';
-    /** Custom */
+    // Custom
     [key: string]: any;
   }
 >;

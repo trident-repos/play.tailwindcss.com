@@ -2,6 +2,7 @@ import * as monaco from 'monaco-editor'
 import {
   DiagnosticsAdapter,
   SuggestAdapter,
+  QuickInfoAdapter,
 } from 'monaco-editor/esm/vs/language/typescript/tsMode'
 import types1 from '!!raw-loader!../monaco/types.d.ts'
 import types2 from '!!raw-loader!../monaco/types-v2.d.ts'
@@ -148,6 +149,47 @@ export function setupJavaScriptMode(
             proxyModel.setValue(addTypeAnnotationToJs(model.getValue()))
           })
         )
+
+        const _provideHover = QuickInfoAdapter.prototype.provideHover
+        QuickInfoAdapter.prototype.provideHover = function (
+          originalModel,
+          position,
+          ...rest
+        ) {
+          if (!this._provideHover) {
+            this._provideHover = _provideHover.bind(this)
+          }
+          const lineDelta =
+            originalModel === model ? getLineDelta(model, position) : 0
+          return this._provideHover(
+            originalModel === model ? proxyModel : originalModel,
+            originalModel === model ? position.delta(lineDelta) : position,
+            ...rest
+          ).then((result) => {
+            if (!result) return
+            if (
+              result.contents[result.contents.length - 1].value
+                ?.trim()
+                .startsWith('*@type* — {import("tailwindcss')
+            ) {
+              return
+            }
+            return {
+              ...result,
+              range: new monaco.Range(
+                result.range.startLineNumber - lineDelta,
+                result.range.startColumn,
+                result.range.endLineNumber - lineDelta,
+                result.range.endColumn
+              ),
+            }
+          })
+        }
+        disposables.push({
+          dispose() {
+            QuickInfoAdapter.prototype.provideHover = _provideHover
+          },
+        })
 
         const _provideCompletionItems =
           SuggestAdapter.prototype.provideCompletionItems
