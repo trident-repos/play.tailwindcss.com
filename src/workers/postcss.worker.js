@@ -247,8 +247,8 @@ addEventListener('message', async (event) => {
         }
       }
       state.variants = getVariants(state)
-      state.screens = isObject(state.config.screens)
-        ? Object.keys(state.config.screens)
+      state.screens = isObject(state.config.theme.screens)
+        ? Object.keys(state.config.theme.screens)
         : []
       state.editor.getConfiguration = () => ({
         editor: {
