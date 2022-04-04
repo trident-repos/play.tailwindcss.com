@@ -510,22 +510,22 @@ const language = {
     screenheader: [
       { include: '@comments' },
       ['@identifier', 'attribute.value'],
-      ['{', { token: 'delimiter.bracket', switchTo: '@selector' }],
+      ['{', { token: 'delimiter.bracket', switchTo: '@mediabody' }],
     ],
     layerheader: [
       { include: '@comments' },
       ['@identifier', 'attribute.value'],
-      ['{', { token: 'delimiter.bracket', switchTo: '@selector' }],
+      ['{', { token: 'delimiter.bracket', switchTo: '@mediabody' }],
     ],
     variantsheader: [
       { include: '@comments' },
       ['@identifier', 'attribute.value'],
       [',', 'delimiter'],
-      ['{', { token: 'delimiter.bracket', switchTo: '@selector' }],
+      ['{', { token: 'delimiter.bracket', switchTo: '@mediabody' }],
     ],
     responsiveheader: [
       { include: '@comments' },
-      ['{', { token: 'delimiter.bracket', switchTo: '@selector' }],
+      ['{', { token: 'delimiter.bracket', switchTo: '@mediabody' }],
     ],
 
     keyframebody: [
