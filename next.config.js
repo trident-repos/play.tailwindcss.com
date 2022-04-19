@@ -64,22 +64,21 @@ const files = [
 
 function createReadFileReplaceLoader(tailwindVersion) {
   return createLoader(function (source) {
-    return source.replace(/_fs\.default\.readFileSync\(.*?'utf8'\)/g, (m) => {
-      for (let i = 0; i < files.length; i++) {
-        if (
-          files[i].pattern.test(m) &&
-          (!files[i].tailwindVersion ||
-            files[i].tailwindVersion === tailwindVersion)
-        ) {
-          return (
-            '`' +
-            fs.readFileSync(files[i].file, 'utf8').replace(/`/g, '\\`') +
-            '`'
-          )
+    return source.replace(
+      /_fs\.default\.readFileSync\(.*?(['"])utf8\1\)/g,
+      (m) => {
+        for (let i = 0; i < files.length; i++) {
+          if (
+            files[i].pattern.test(m) &&
+            (!files[i].tailwindVersion ||
+              files[i].tailwindVersion === tailwindVersion)
+          ) {
+            return JSON.stringify(fs.readFileSync(files[i].file, 'utf8'))
+          }
         }
+        return m
       }
-      return m
-    })
+    )
   })
 }
 
