@@ -1,0 +1,21 @@
+name: Upgrade Tailwind
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version'
+        required: true
+        default: 'latest'
+jobs:
+  upgrade-tailwindcss:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: '15'
+      - run: npm install tailwindcss@${{ github.event.inputs.version }} --save-exact
+      - run: echo 'NEW_VERSION=$(cat package.json | sed -n "s/^.*\"tailwindcss\": \"\([^\"]*\).*$/\1/p")' >> $GITHUB_ENV
+      - run: echo $NEW_VERSION
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
