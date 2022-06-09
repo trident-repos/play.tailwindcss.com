@@ -97,10 +97,22 @@ export async function processCss(
 
   let jitContext
   if (jit && !skipIntelliSense) {
-    jitContext =
-      require('tailwindcss-v2/lib/jit/lib/setupContextUtils').createContext(
-        resolveConfig(config)
-      )
+    if (tailwindVersion === '2') {
+      jitContext =
+        require('tailwindcss-v2/lib/jit/lib/setupContextUtils').createContext(
+          resolveConfig(config)
+        )
+    } else if (tailwindVersion === 'insiders') {
+      jitContext =
+        require('tailwindcss-insiders/lib/lib/setupContextUtils').createContext(
+          resolveConfig(config)
+        )
+    } else {
+      jitContext =
+        require('tailwindcss/lib/lib/setupContextUtils').createContext(
+          resolveConfig(config)
+        )
+    }
   }
 
   const applyComplexClasses =
