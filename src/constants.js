@@ -10,6 +10,7 @@ let plugins = {
 let v3Plugins = {
   ...plugins,
   '@tailwindcss/forms': require('@tailwindcss/forms-next/package.json?fields=version,main'),
+  '@tailwindcss/line-clamp': require('@tailwindcss/line-clamp-next/package.json?fields=version,main'),
   '@tailwindcss/typography': require('@tailwindcss/typography-next/package.json?fields=version,main'),
 }
 
