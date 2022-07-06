@@ -280,12 +280,12 @@ export default function Editor({
               ref={cssOutputEditorContainerRef}
               className="absolute inset-0 w-full h-full css-output-editor"
             />
+            <CopyButton
+              editorRef={cssOutputEditorRef}
+              className="absolute bottom-4 right-[calc(14px+0.625rem)]"
+              isVisible={isCssOutputCopyButtonVisible}
+            />
           </div>
-          <CopyButton
-            editorRef={cssOutputEditorRef}
-            className="absolute bottom-4 right-[calc(14px+0.625rem)]"
-            isVisible={isCssOutputCopyButtonVisible}
-          />
         </div>
       </SplitPane>
     </div>
