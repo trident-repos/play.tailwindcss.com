@@ -325,7 +325,7 @@ function CopyButton({ editorRef, className, isVisible }) {
             setCopyCount((c) => c + 1)
           })
           .finally(() => {
-            editorRef.current.focus()
+            ;(editorRef.current.editor || editorRef.current).focus()
           })
       }}
     >
