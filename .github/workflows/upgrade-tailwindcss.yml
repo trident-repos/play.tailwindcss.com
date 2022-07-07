@@ -1,11 +1,5 @@
 name: Upgrade Tailwind
-on:
-  workflow_dispatch:
-    inputs:
-      version:
-        description: 'Version'
-        required: true
-        default: 'latest'
+on: workflow_dispatch
 jobs:
   upgrade-tailwindcss:
     runs-on: ubuntu-latest
@@ -14,12 +8,22 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '15'
-      - run: npm install tailwindcss@${{ github.event.inputs.version }} --save-exact --legacy-peer-deps
       - run: |
-          NEW_VERSION=$(cat package.json | sed -n 's/^.*\"tailwindcss\": \"\([^\"]*\).*$/\1/p')
+          npm install tailwindcss@latest tailwindcss-insiders@npm:tailwindcss@insiders --save-exact --legacy-peer-deps
+      - run: |
+          NEW_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss\": \"\([^\"]*\).*$/\1/p')
+          NEW_INSIDERS_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss-insiders\": \"npm:tailwindcss@\([^\"]*\).*$/\1/p')
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
-      - run: echo $NEW_VERSION
-      - name: Create Pull Request
-        uses: peter-evans/create-pull-request@v4
-        with:
-          title: Upgrade `tailwindcss` to `v${{ env.NEW_VERSION }}`
+          echo "NEW_INSIDERS_VERSION=$NEW_INSIDERS_VERSION" >> $GITHUB_ENV
+      - if: ${{ env.NEW_VERSION }}
+        run: |
+          echo "updated"
+          echo $NEW_VERSION
+      - if: ${{ env.NEW_INSIDERS_VERSION }}
+        run: |
+          echo "updated insiders"
+          echo $NEW_INSIDERS_VERSION
+      # - name: Create Pull Request
+      #   uses: peter-evans/create-pull-request@v4
+      #   with:
+      #     title: Upgrade `tailwindcss` to `v${{ env.NEW_VERSION }}`
