@@ -15,15 +15,14 @@ jobs:
           NEW_INSIDERS_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss-insiders\": \"npm:tailwindcss@\([^\"]*\).*$/\1/p')
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "NEW_INSIDERS_VERSION=$NEW_INSIDERS_VERSION" >> $GITHUB_ENV
-      - if: ${{ env.NEW_VERSION }}
-        run: |
-          echo "TITLE1=\"`tailwindcss` to $NEW_VERSION\""
-      - if: ${{ env.NEW_INSIDERS_VERSION }}
-        run: |
-          echo "TITLE2=\"`insiders` to $NEW_INSIDERS_VERSION\""
-      - if: ${{ env.TITLE1 || env.TITLE2 }}
-        run: |
-          echo "${{ join([env.TITLE1, env.TITLE2], ',') }}"
+      - if: ${{ env.NEW_VERSION && env.NEW_INSIDERS_VERSION }}
+        run: echo "PR_TITLE=\"Upgrade `tailwindcss` to $NEW_VERSION, `insiders` to $NEW_INSIDERS_VERSION\"" >> $GITHUB_ENV
+      - if: ${{ env.NEW_VERSION && env.NEW_INSIDERS_VERSION == '' }}
+        run: echo "PR_TITLE=\"Upgrade `tailwindcss` to $NEW_VERSION\"" >> $GITHUB_ENV
+      - if: ${{ env.NEW_VERSION == '' && env.NEW_INSIDERS_VERSION }}
+        run: echo "PR_TITLE=\"Upgrade `insiders` to $NEW_INSIDERS_VERSION\"" >> $GITHUB_ENV
+      - if: ${{ env.PR_TITLE }}
+        run: echo $PR_TITLE
       # - name: Create Pull Request
       #   uses: peter-evans/create-pull-request@v4
       #   with:
