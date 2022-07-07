@@ -16,13 +16,13 @@ jobs:
           echo "NEW_VERSION=$NEW_VERSION" >> $GITHUB_ENV
           echo "NEW_INSIDERS_VERSION=$NEW_INSIDERS_VERSION" >> $GITHUB_ENV
       - if: ${{ env.NEW_VERSION && env.NEW_INSIDERS_VERSION }}
-        run: echo "PR_TITLE=\"Upgrade \`tailwindcss\` to $NEW_VERSION, \`insiders\` to $NEW_INSIDERS_VERSION\"" >> $GITHUB_ENV
+        run: echo "PR_TITLE=\"Upgrade \`tailwindcss\` to v$NEW_VERSION, \`insiders\` to v$NEW_INSIDERS_VERSION\"" >> $GITHUB_ENV
       - if: ${{ env.NEW_VERSION && env.NEW_INSIDERS_VERSION == '' }}
-        run: echo "PR_TITLE=\"Upgrade \`tailwindcss\` to $NEW_VERSION\"" >> $GITHUB_ENV
+        run: echo "PR_TITLE=\"Upgrade \`tailwindcss\` to v$NEW_VERSION\"" >> $GITHUB_ENV
       - if: ${{ env.NEW_VERSION == '' && env.NEW_INSIDERS_VERSION }}
-        run: echo "PR_TITLE=\"Upgrade \`insiders\` to $NEW_INSIDERS_VERSION\"" >> $GITHUB_ENV
+        run: echo "PR_TITLE=\"Upgrade \`insiders\` to v$NEW_INSIDERS_VERSION\"" >> $GITHUB_ENV
       - if: ${{ env.PR_TITLE }}
         name: Create Pull Request
         uses: peter-evans/create-pull-request@v4
         with:
-          title: Upgrade `tailwindcss` to `v${{ env.NEW_VERSION }}`
+          title: ${{ env.PR_TITLE }}
