@@ -1,8 +1,10 @@
 const path = require('path')
 const { devices } = require('@playwright/test')
 
+/** @type {import('@playwright/test').PlaywrightTestConfig} */
 module.exports = {
   testDir: path.join(__dirname, 'tests'),
+  retries: 3,
   projects: [
     {
       name: 'chrome',

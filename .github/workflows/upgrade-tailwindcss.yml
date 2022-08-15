@@ -1,5 +1,17 @@
 name: Upgrade Tailwind
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tailwind CSS version'
+        required: false
+        default: 'latest'
+        type: string
+      insidersVersion:
+        description: 'Tailwind CSS insiders version'
+        required: false
+        default: 'insiders'
+        type: string
 jobs:
   upgrade-tailwindcss:
     runs-on: ubuntu-latest
@@ -8,8 +20,10 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '15'
-      - run: |
-          npm install tailwindcss@latest tailwindcss-insiders@npm:tailwindcss@insiders --save-exact --legacy-peer-deps
+      - uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 2
+          command: npm install tailwindcss@${{ inputs.version }} tailwindcss-insiders@npm:tailwindcss@${{ inputs.insidersVersion }} --save-exact --legacy-peer-deps
       - run: |
           NEW_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss\": \"\([^\"]*\).*$/\1/p')
           NEW_INSIDERS_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss-insiders\": \"npm:tailwindcss@\([^\"]*\).*$/\1/p')

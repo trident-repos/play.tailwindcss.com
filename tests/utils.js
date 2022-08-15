@@ -20,5 +20,9 @@ module.exports.editTab = async function editTab(
   let modifier = browserName === 'webkit' ? 'Meta' : 'Control'
   await page.keyboard.press(`${modifier}+A`)
   await page.keyboard.press('Backspace')
+
+  // allow color decorations etc. to clear
+  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 150)))
+
   await page.keyboard.type(content)
 }
