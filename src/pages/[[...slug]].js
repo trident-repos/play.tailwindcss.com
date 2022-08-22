@@ -64,7 +64,9 @@ function Pen({
   const [tailwindVersion, setTailwindVersion] = useState(
     toValidTailwindVersion(initialContent.version)
   )
-  const [jit, setJit] = useState(false)
+  const [jit, setJit] = useState(
+    toValidTailwindVersion(initialContent.version) === '3'
+  )
   const cssOutput = useRef('')
   const [cssOutputFilter, setCssOutputFilter] = useState([])
 

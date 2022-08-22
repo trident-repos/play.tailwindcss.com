@@ -96,7 +96,7 @@ addEventListener('message', async (event) => {
                 event.data.lsp.context
               )
             ),
-          []
+          { suggestions: [] }
         )
         break
       case 'completeString':
@@ -196,6 +196,7 @@ addEventListener('message', async (event) => {
 
     const result = await compileWorker.emit({
       ...event.data,
+      skipIntelliSense: state ? event.data.skipIntelliSense : false,
       _isFreshBuild: isFreshBuild,
       html,
       css,
