@@ -199,6 +199,7 @@ export function createMonacoEditor({
       horizontalScrollbarSize: 21,
     },
   })
+  window.MonacoEditor = editor
   disposables.push(editor)
 
   setupKeybindings(editor)

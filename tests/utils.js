@@ -16,20 +16,14 @@ module.exports.initialBuild = async function initialBuild(
   return { iframe }
 }
 
-module.exports.editTab = async function editTab(
-  page,
-  browserName,
-  tab,
-  content
-) {
+module.exports.editTab = async function editTab(page, tab, content) {
   await page.locator(`button:text-is("${tab}")`).click()
-  await page.locator('.monaco-scrollable-element').first().click()
-  let modifier = browserName === 'webkit' ? 'Meta' : 'Control'
-  await page.keyboard.press(`${modifier}+A`)
-  await page.keyboard.press('Backspace')
-
-  // allow color decorations etc. to clear
-  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 150)))
-
-  await page.keyboard.type(content)
+  await page.waitForFunction(
+    (tab) => window.MonacoEditor.getModel().uri.path === `/${tab}`,
+    tab
+  )
+  await page.evaluate(
+    (content) => window.MonacoEditor.getModel().setValue(content),
+    content
+  )
 }
