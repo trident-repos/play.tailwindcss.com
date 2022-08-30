@@ -22,7 +22,8 @@ jobs:
           node-version: '15'
       - uses: nick-fields/retry@v2
         with:
-          timeout_minutes: 2
+          timeout_minutes: 3
+          max_attempts: 18
           command: npm install tailwindcss@${{ inputs.version }} tailwindcss-insiders@npm:tailwindcss@${{ inputs.insidersVersion }} --save-exact --legacy-peer-deps
       - run: |
           NEW_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss\": \"\([^\"]*\).*$/\1/p')
