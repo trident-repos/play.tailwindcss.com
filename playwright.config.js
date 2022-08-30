@@ -5,6 +5,9 @@ const { devices } = require('@playwright/test')
 module.exports = {
   testDir: path.join(__dirname, 'tests'),
   retries: 3,
+  expect: {
+    timeout: 10000,
+  },
   projects: [
     {
       name: 'chrome',
