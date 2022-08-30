@@ -17,7 +17,7 @@ export async function parseConfig(configStr, tailwindVersion) {
     if (error instanceof TypeError) {
       self.importShim = (0, eval)('u=>import(u)')
     } else {
-      importScripts('https://unpkg.com/shimport@2.0.4/index.js')
+      importScripts('/js/shimport-2.0.4.js')
       self.importShim = __shimport__.load
     }
   }
