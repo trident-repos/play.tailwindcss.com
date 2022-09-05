@@ -6,14 +6,34 @@ import {
 } from 'monaco-editor/esm/vs/language/typescript/tsMode'
 import types1 from '!!raw-loader!../monaco/types.d.ts'
 import types2 from '!!raw-loader!../monaco/types-v2.d.ts'
-import types3 from '!!raw-loader!tailwindcss/types/config.d.ts'
-import types3CorePluginList from '!!raw-loader!tailwindcss/types/generated/corePluginList.d.ts'
-import types3Colors from '!!raw-loader!tailwindcss/types/generated/colors.d.ts'
-import typesInsiders from '!!raw-loader!tailwindcss-insiders/types/config.d.ts'
-import typesInsidersCorePluginList from '!!raw-loader!tailwindcss-insiders/types/generated/corePluginList.d.ts'
-import typesInsidersColors from '!!raw-loader!tailwindcss-insiders/types/generated/colors.d.ts'
 import postcssTypes from '!!raw-loader!string-replace-loader?search=\\/\\*.*?\\*\\/&replace=&flags=sg!../../node_modules/postcss/lib/postcss.d.ts'
 import sourcemapTypes from '!!raw-loader!source-map-js/source-map.d.ts'
+
+function importAll(r) {
+  return r.keys().map((path) => ({ path, mod: r(path).default }))
+}
+
+function collectTypes(rootFolder, typesFolder) {
+  return {
+    'index.d.ts': 'export * from "./types/config"',
+    ...Object.fromEntries(
+      importAll(rootFolder).map(({ path, mod }) => [
+        path.replace('./', ''),
+        mod,
+      ])
+    ),
+    ...Object.fromEntries(
+      importAll(typesFolder).map(({ path, mod }) => [
+        path.replace('./', 'types/'),
+        // Remove the `content` field
+        mod.replace(
+          /interface RequiredConfig \{.*?\}/s,
+          'interface RequiredConfig {}'
+        ),
+      ])
+    ),
+  }
+}
 
 const CONFIG_URI = 'file:///Config'
 const CONFIG_PROXY_URI = 'file:///Config.proxy'
@@ -21,24 +41,18 @@ const CONFIG_PROXY_URI = 'file:///Config.proxy'
 const types = {
   1: { 'index.d.ts': types1 },
   2: { 'index.d.ts': types2 },
-  3: {
-    // Remove the `content` field
-    'index.d.ts': types3.replace(
-      /interface RequiredConfig \{.*?\}/s,
-      'interface RequiredConfig {}'
-    ),
-    'generated/corePluginList.d.ts': types3CorePluginList,
-    'generated/colors.d.ts': types3Colors,
-  },
-  insiders: {
-    // Remove the `content` field
-    'index.d.ts': typesInsiders.replace(
-      /interface RequiredConfig \{.*?\}/s,
-      'interface RequiredConfig {}'
-    ),
-    'generated/corePluginList.d.ts': typesInsidersCorePluginList,
-    'generated/colors.d.ts': typesInsidersColors,
-  },
+  3: collectTypes(
+    require.context('!!raw-loader!tailwindcss/', false, /\.d\.ts$/),
+    require.context('!!raw-loader!tailwindcss/types/', true, /\.d\.ts$/)
+  ),
+  insiders: collectTypes(
+    require.context('!!raw-loader!tailwindcss-insiders/', false, /\.d\.ts$/),
+    require.context(
+      '!!raw-loader!tailwindcss-insiders/types/',
+      true,
+      /\.d\.ts$/
+    )
+  ),
 }
 
 export function setupJavaScriptMode(
@@ -48,12 +62,16 @@ export function setupJavaScriptMode(
   initialTailwindVersion
 ) {
   const disposables = []
+  const typeDisposables = []
   let model
   let tailwindVersion = initialTailwindVersion
 
   function registerTypes(version) {
+    typeDisposables.forEach((disposable) => disposable.dispose())
+    typeDisposables.length = 0
+
     for (let file in types[version]) {
-      disposables.push(
+      typeDisposables.push(
         monaco.languages.typescript.javascriptDefaults.addExtraLib(
           types[version][file],
           `file:///node_modules/@types/tailwindcss/${file}`
@@ -140,24 +158,6 @@ export function setupJavaScriptMode(
         )
 
         registerTypes(tailwindVersion)
-
-        disposables.push(
-          monaco.languages.typescript.javascriptDefaults.addExtraLib(
-            `
-              import type { Config, PluginCreator } from 'tailwindcss'
-              type Plugin = {
-                withOptions<T>(
-                  plugin: (options: T) => PluginCreator,
-                  config?: (options: T) => Config
-                ): { (options: T): { handler: PluginCreator; config?: Config }; __isOptionsFunction: true }
-                (plugin: PluginCreator, config?: Config): { handler: PluginCreator; config?: Config }
-              }
-              declare const plugin: Plugin
-              export = plugin
-            `,
-            'file:///node_modules/@types/tailwindcss/plugin.d.ts'
-          )
-        )
 
         model = monaco.editor.createModel(
           content || '',
@@ -269,6 +269,9 @@ export function setupJavaScriptMode(
     },
     dispose() {
       disposables.forEach((disposable) => disposable.dispose())
+      disposables.length = 0
+      typeDisposables.forEach((disposable) => disposable.dispose())
+      typeDisposables.length = 0
     },
     setTailwindVersion(newTailwindVersion) {
       tailwindVersion = newTailwindVersion
