@@ -76,7 +76,7 @@ export async function parseConfig(configStr, tailwindVersion) {
           .split('\n')
           .map((line, i) =>
             line.replace(
-              /\brequire\(([^(]*)\)/g,
+              /\brequire\(([^)]*)\)/g,
               (_m, id) =>
                 `(await require(${id.trim() === '' ? 'undefined' : id}, ${
                   i + 1
