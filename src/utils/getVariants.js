@@ -1,5 +1,6 @@
 import { runPlugin } from './runPlugin'
 import dlv from 'dlv'
+import { withoutLogs } from './withoutLogs'
 
 export function getVariants(state) {
   if (state.jit) {
@@ -67,19 +68,21 @@ export function getVariants(state) {
         for (let fn of fns) {
           let definition
           let container = root.clone()
-          let returnValue = fn({
-            container,
-            separator: state.separator,
-            modifySelectors,
-            format: (def) => {
-              definition = def.replace(/:merge\(([^)]+)\)/g, '$1')
-            },
-            wrap: (rule) => {
-              if (rule.type === 'atrule') {
-                definition = `@${rule.name} ${rule.params}`
-              }
-            },
-          })
+          let returnValue = withoutLogs(() =>
+            fn({
+              container,
+              separator: state.separator,
+              modifySelectors,
+              format: (def) => {
+                definition = def.replace(/:merge\(([^)]+)\)/g, '$1')
+              },
+              wrap: (rule) => {
+                if (rule.type === 'atrule') {
+                  definition = `@${rule.name} ${rule.params}`
+                }
+              },
+            })
+          )
 
           if (!definition) {
             definition = returnValue

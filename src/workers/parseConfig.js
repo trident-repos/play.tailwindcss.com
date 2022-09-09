@@ -1,11 +1,13 @@
 import { PLUGINS, PLUGIN_BUILDER_VERSION } from '../constants'
 import colors2 from 'tailwindcss-v2/colors'
 import colors3 from 'tailwindcss/colors'
+import colorsInsiders from 'tailwindcss-insiders/colors'
+import { withoutLogs } from '../utils/withoutLogs'
 
 let colors = {
   2: colors2,
   3: colors3,
-  insiders: colors3,
+  insiders: colorsInsiders,
 }
 
 export async function parseConfig(configStr, tailwindVersion) {
@@ -47,7 +49,9 @@ export async function parseConfig(configStr, tailwindVersion) {
       if (/^tailwindcss\\/colors(\\.js)?$/.test(m)) {
         ${
           colors[tailwindVersion]
-            ? `return ${JSON.stringify(colors[tailwindVersion])}`
+            ? `return ${withoutLogs(() =>
+                JSON.stringify(colors[tailwindVersion])
+              )}`
             : `throw new RequireError("Cannot find module '" + m + "'", line)`
         }
       }
