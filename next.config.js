@@ -116,8 +116,9 @@ module.exports = {
             r.issuer.and &&
             r.issuer.and.length === 1 &&
             r.issuer.and[0].source &&
-            r.issuer.and[0].source.replace(/\\/g, '') ===
+            new RegExp(`^${r.issuer.and[0].source}$`).test(
               path.resolve(process.cwd(), 'src/pages/_app')
+            )
           ) {
             r.issuer.or = [
               ...r.issuer.and,
@@ -164,12 +165,12 @@ module.exports = {
     })
 
     config.module.rules.push({
-      test: /tailwindcss\/lib\/corePlugins\.js/,
+      test: require.resolve('tailwindcss/lib/corePlugins.js'),
       use: [createReadFileReplaceLoader(3)],
     })
 
     config.module.rules.push({
-      test: /tailwindcss-insiders\/lib\/corePlugins\.js/,
+      test: require.resolve('tailwindcss-insiders/lib/corePlugins.js'),
       use: [createReadFileReplaceLoader('insiders')],
     })
 
