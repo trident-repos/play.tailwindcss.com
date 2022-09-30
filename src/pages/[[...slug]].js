@@ -497,8 +497,6 @@ export async function getServerSideProps({ params, res, query }) {
       : 'html',
   }
 
-  console.log(params.slug)
-
   if (
     !params.slug ||
     (params.slug.length === 1 && params.slug[0] === 'index')
