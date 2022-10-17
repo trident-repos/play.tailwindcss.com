@@ -3,14 +3,12 @@ import dlv from 'dlv'
 import { withoutLogs } from './withoutLogs'
 
 export function getVariants(state) {
-  if (state.jit) {
-    function escape(className) {
-      let node = state.modules.postcssSelectorParser.module.className()
-      node.value = className
-      return dlv(node, 'raws.value', node.value)
-    }
+  if (state.jitContext?.getVariants) {
+    return state.jitContext.getVariants()
+  }
 
-    let result = {}
+  if (state.jit) {
+    let result = []
     // [name, [sort, fn]]
     // [name, [[sort, fn]]]
     Array.from(state.jitContext.variantMap).forEach(
@@ -19,98 +17,114 @@ export function getVariants(state) {
           return
         }
 
-        let fns = (
-          Array.isArray(variantFnOrFns[0]) ? variantFnOrFns : [variantFnOrFns]
-        ).map(([_sort, fn]) => fn)
-
-        let placeholder = '__variant_placeholder__'
-
-        let root = state.modules.postcss.module.root({
-          nodes: [
-            state.modules.postcss.module.rule({
-              selector: `.${escape(placeholder)}`,
-              nodes: [],
-            }),
-          ],
-        })
-
-        let classNameParser = state.modules.postcssSelectorParser.module(
-          (selectors) => {
-            return selectors.first.filter(({ type }) => type === 'class').pop()
-              .value
-          }
-        )
-
-        function getClassNameFromSelector(selector) {
-          return classNameParser.transformSync(selector)
-        }
-
-        function modifySelectors(modifierFunction) {
-          root.each((rule) => {
-            if (rule.type !== 'rule') {
-              return
+        result.push({
+          name: variantName,
+          values: [],
+          isArbitrary: false,
+          selectors: () => {
+            function escape(className) {
+              let node = state.modules.postcssSelectorParser.module.className()
+              node.value = className
+              return dlv(node, 'raws.value', node.value)
             }
 
-            rule.selectors = rule.selectors.map((selector) => {
-              return modifierFunction({
-                get className() {
-                  return getClassNameFromSelector(selector)
-                },
-                selector,
-              })
+            let fns = (
+              Array.isArray(variantFnOrFns[0])
+                ? variantFnOrFns
+                : [variantFnOrFns]
+            ).map(([_sort, fn]) => fn)
+
+            let placeholder = '__variant_placeholder__'
+
+            let root = state.modules.postcss.module.root({
+              nodes: [
+                state.modules.postcss.module.rule({
+                  selector: `.${escape(placeholder)}`,
+                  nodes: [],
+                }),
+              ],
             })
-          })
-          return root
-        }
 
-        let definitions = []
+            let classNameParser = state.modules.postcssSelectorParser.module(
+              (selectors) => {
+                return selectors.first
+                  .filter(({ type }) => type === 'class')
+                  .pop().value
+              }
+            )
 
-        for (let fn of fns) {
-          let definition
-          let container = root.clone()
-          let returnValue = withoutLogs(() =>
-            fn({
-              container,
-              separator: state.separator,
-              modifySelectors,
-              format: (def) => {
-                definition = def.replace(/:merge\(([^)]+)\)/g, '$1')
-              },
-              wrap: (rule) => {
-                if (rule.type === 'atrule') {
-                  definition = `@${rule.name} ${rule.params}`
+            function getClassNameFromSelector(selector) {
+              return classNameParser.transformSync(selector)
+            }
+
+            function modifySelectors(modifierFunction) {
+              root.each((rule) => {
+                if (rule.type !== 'rule') {
+                  return
                 }
-              },
-            })
-          )
 
-          if (!definition) {
-            definition = returnValue
-          }
+                rule.selectors = rule.selectors.map((selector) => {
+                  return modifierFunction({
+                    get className() {
+                      return getClassNameFromSelector(selector)
+                    },
+                    selector,
+                  })
+                })
+              })
+              return root
+            }
 
-          if (definition) {
-            definitions.push(definition)
-            continue
-          }
+            let definitions = []
 
-          container.walkDecls((decl) => {
-            decl.remove()
-          })
+            for (let fn of fns) {
+              let definition
+              let container = root.clone()
+              let returnValue = withoutLogs(() =>
+                fn({
+                  container,
+                  separator: state.separator,
+                  modifySelectors,
+                  format: (def) => {
+                    definition = def.replace(/:merge\(([^)]+)\)/g, '$1')
+                  },
+                  wrap: (rule) => {
+                    if (rule.type === 'atrule') {
+                      definition = `@${rule.name} ${rule.params}`
+                    }
+                  },
+                })
+              )
 
-          definition = removeBrackets(
-            container
-              .toString()
-              .replace(`.${escape(`${variantName}:${placeholder}`)}`, '&')
-          )
-            .replace(/\s*\n\s*/g, ' ')
-            .trim()
+              if (!definition) {
+                definition = returnValue
+              }
 
-          if (!definition.includes(placeholder)) {
-            definitions.push(definition)
-          }
-        }
+              if (definition) {
+                definitions.push(definition)
+                continue
+              }
 
-        result[variantName] = definitions.join(', ') || null
+              container.walkDecls((decl) => {
+                decl.remove()
+              })
+
+              definition = removeBrackets(
+                container
+                  .toString()
+                  .replace(`.${escape(`${variantName}:${placeholder}`)}`, '&')
+              )
+                .replace(/\s*\n\s*/g, ' ')
+                .trim()
+
+              if (!definition.includes(placeholder)) {
+                definitions.push(definition)
+              }
+            }
+
+            return definitions
+          },
+        })
       }
     )
 
@@ -151,7 +165,12 @@ export function getVariants(state) {
     })
   })
 
-  return variants.reduce((obj, variant) => ({ ...obj, [variant]: null }), {})
+  return variants.map((variant) => ({
+    name: variant,
+    values: [],
+    isArbitrary: false,
+    selectors: () => [],
+  }))
 }
 
 function removeBrackets(str) {

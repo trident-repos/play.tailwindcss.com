@@ -282,6 +282,9 @@ addEventListener('message', async (event) => {
             invalidTailwindDirective: 'error',
             recommendedVariantOrder: 'warning',
           },
+          experimental: {
+            classRegex: [],
+          },
         },
       })
       state.enabled = true
