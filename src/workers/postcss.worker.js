@@ -266,6 +266,7 @@ addEventListener('message', async (event) => {
       state.screens = isObject(state.config.theme.screens)
         ? Object.keys(state.config.theme.screens)
         : []
+      state.editor.readDirectory = () => []
       state.editor.getConfiguration = () => ({
         editor: {
           tabSize: 2,
