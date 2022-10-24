@@ -1,5 +1,6 @@
 module.exports = {
   sync: (patterns) => [].concat(patterns),
+  escapePath: (path) => path,
   generateTasks: (patterns) => [
     {
       dynamic: false,
