@@ -69,6 +69,6 @@
     "worker-loader": "^3.0.8"
   },
   "devDependencies": {
-    "@playwright/test": "^1.21.1"
+    "@playwright/test": "1.25.2"
   }
 }
