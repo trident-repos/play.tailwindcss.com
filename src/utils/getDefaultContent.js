@@ -66,7 +66,8 @@ export async function getDefaultContent() {
 </div>
 `
   const css = '@tailwind base;\n@tailwind components;\n@tailwind utilities;\n'
-  const config = `module.exports = {
+  const config = `/** @type {import('tailwindcss').Config} */
+module.exports = {
   theme: {
     extend: {
       // ...

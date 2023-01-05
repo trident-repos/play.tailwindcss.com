@@ -198,7 +198,11 @@ export function createMonacoEditor({
     scrollbar: {
       horizontalScrollbarSize: 21,
     },
+    quickSuggestions: {
+      strings: true,
+    },
   })
+  window.MonacoEditor = editor
   disposables.push(editor)
 
   setupKeybindings(editor)
@@ -215,7 +219,7 @@ export function createMonacoEditor({
           css:
             id === 'css' && typeof newContent !== 'undefined'
               ? newContent
-              : css.getModel()?.getValue() ?? initialContent.css,
+              : css.getValue() ?? initialContent.css,
           config:
             id === 'config' && typeof newContent !== 'undefined'
               ? newContent

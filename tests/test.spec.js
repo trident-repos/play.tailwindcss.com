@@ -1,5 +1,8 @@
 const { test, expect } = require('@playwright/test')
 const utils = require('./utils')
+const {
+  version: insidersVersion,
+} = require('tailwindcss-insiders/package.json')
 
 test.describe.configure({ mode: 'parallel' })
 
@@ -35,20 +38,12 @@ test('should initialise monaco editor', async ({ page }) => {
   )
 })
 
-test('should update the preview when editing HTML', async ({
-  page,
-  browserName,
-}) => {
+test('should update the preview when editing HTML', async ({ page }) => {
   await page.goto('/')
 
   let { iframe } = await utils.initialBuild(page)
 
-  await utils.editTab(
-    page,
-    browserName,
-    'HTML',
-    '<div class="text-4xl">Hello World!</div>'
-  )
+  await utils.editTab(page, 'HTML', '<div class="text-4xl">Hello World!</div>')
 
   await expect(iframe.locator('text=Hello World!')).toBeVisible()
   await expect(iframe.locator('text=Hello World!')).toHaveCSS(
@@ -57,15 +52,12 @@ test('should update the preview when editing HTML', async ({
   )
 })
 
-test('should update the preview when editing CSS', async ({
-  page,
-  browserName,
-}) => {
+test('should update the preview when editing CSS', async ({ page }) => {
   await page.goto('/')
 
   let { iframe } = await utils.initialBuild(page)
 
-  await utils.editTab(page, browserName, 'CSS', 'body { background: red; }')
+  await utils.editTab(page, 'CSS', 'body { background: red; }')
 
   await expect(iframe.locator('body')).toHaveCSS(
     'background-color',
@@ -73,19 +65,21 @@ test('should update the preview when editing CSS', async ({
   )
 })
 
-test('should update the preview when editing config', async ({
-  page,
-  browserName,
-}) => {
+test('should update the preview when editing config', async ({ page }) => {
   await page.goto('/')
 
   let { iframe } = await utils.initialBuild(page)
 
   await utils.editTab(
     page,
-    browserName,
     'Config',
-    'module.exports={plugins:[function({addBase}){addBase({body:{background:"red'
+    `module.exports = {
+      plugins: [
+        function({ addBase }) {
+          addBase({ body: { background: "red" } })
+        }
+      ]
+    }`
   )
 
   await expect(iframe.locator('body')).toHaveCSS(
@@ -94,17 +88,12 @@ test('should update the preview when editing config', async ({
   )
 })
 
-test('should tidy HTML', async ({ page, browserName }) => {
+test('should tidy HTML', async ({ page }) => {
   await page.goto('/')
 
   await utils.initialBuild(page)
 
-  await utils.editTab(
-    page,
-    browserName,
-    'HTML',
-    '<div    class="sm:p-0 p-0"  >  </div>'
-  )
+  await utils.editTab(page, 'HTML', '<div    class="sm:p-0 p-0"  >  </div>')
 
   await page.locator('button:text-is("Tidy")').click()
 
@@ -115,12 +104,12 @@ test('should tidy HTML', async ({ page, browserName }) => {
   )
 })
 
-test('should tidy CSS', async ({ page, browserName }) => {
+test('should tidy CSS', async ({ page }) => {
   await page.goto('/')
 
   await utils.initialBuild(page)
 
-  await utils.editTab(page, browserName, 'CSS', 'body    {  color: red;   }')
+  await utils.editTab(page, 'CSS', 'body    {  color: red;   }')
 
   await page.locator('button:text-is("Tidy")').click()
 
@@ -131,16 +120,15 @@ test('should tidy CSS', async ({ page, browserName }) => {
   )
 })
 
-test('should tidy config', async ({ page, browserName }) => {
+test('should tidy config', async ({ page }) => {
   await page.goto('/')
 
   await utils.initialBuild(page)
 
   await utils.editTab(
     page,
-    browserName,
     'Config',
-    'module.exports={plugins:[function({addBase}){addBase({body:{background:"red'
+    'module.exports={plugins:[function({addBase}){addBase({body:{background:"red"}})}]}'
   )
 
   await page.locator('button:text-is("Tidy")').click()
@@ -157,4 +145,14 @@ test('should tidy config', async ({ page, browserName }) => {
 }
 `
   )
+})
+
+test('should support insiders', async ({ page }) => {
+  await page.goto('/')
+  await utils.initialBuild(page)
+
+  await page.click('[data-test=version]')
+  await page.click('[data-test=version-insiders]')
+
+  await utils.initialBuild(page, insidersVersion)
 })

@@ -3,33 +3,23 @@ const utils = require('./utils')
 
 test.describe.configure({ mode: 'parallel' })
 
-test('hover', async ({ page, browserName }) => {
+test('hover', async ({ page }) => {
   await page.goto('/')
 
   await utils.initialBuild(page)
 
-  await utils.editTab(
-    page,
-    browserName,
-    'HTML',
-    '<div class="uppercase"></div>'
-  )
+  await utils.editTab(page, 'HTML', '<div class="uppercase"></div>')
 
   await page.locator(`:text-is('"uppercase"')`).hover()
   await expect(page.locator('text=text-transform: uppercase')).toBeVisible()
 })
 
-test('autocomplete', async ({ page, browserName }) => {
+test('autocomplete', async ({ page }) => {
   await page.goto('/')
 
   await utils.initialBuild(page)
 
-  await utils.editTab(
-    page,
-    browserName,
-    'HTML',
-    '<div class="uppercase"></div>'
-  )
+  await utils.editTab(page, 'HTML', '<div class="uppercase"></div>')
 
   await page.locator(`:text-is('"uppercase"')`).dblclick()
   await page.keyboard.type('lowe')
@@ -39,17 +29,12 @@ test('autocomplete', async ({ page, browserName }) => {
   await expect(page.locator(`:text-is('"lowercase"')`)).toBeVisible()
 })
 
-test('diagnostics', async ({ page, browserName }) => {
+test('diagnostics', async ({ page }) => {
   await page.goto('/')
 
   await utils.initialBuild(page)
 
-  await utils.editTab(
-    page,
-    browserName,
-    'HTML',
-    '<div class="uppercase lowercase"></div>'
-  )
+  await utils.editTab(page, 'HTML', '<div class="uppercase lowercase"></div>')
 
   await expect(page.locator('.squiggly-warning').first()).toBeVisible()
 
@@ -62,17 +47,12 @@ test('diagnostics', async ({ page, browserName }) => {
 })
 
 // TODO
-test.skip('color decorators', async ({ page, browserName }) => {
+test.skip('color decorators', async ({ page }) => {
   await page.goto('/')
 
   await utils.initialBuild(page)
 
-  await utils.editTab(
-    page,
-    browserName,
-    'HTML',
-    '<div class="bg-red-500"></div>'
-  )
+  await utils.editTab(page, 'HTML', '<div class="bg-red-500"></div>')
 
   await expect(page.locator(`text=bg-red-500`)).toBeVisible()
 

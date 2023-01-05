@@ -4,13 +4,14 @@ import { toggleTheme } from '../utils/theme'
 import tailwind1 from 'tailwindcss-v1/package.json?fields=version'
 import tailwind2 from 'tailwindcss-v2/package.json?fields=version'
 import tailwind3 from 'tailwindcss/package.json?fields=version'
+import tailwindInsiders from 'tailwindcss-insiders/package.json?fields=version'
 import { Listbox } from '@headlessui/react'
 
 const versions = {
-  // insiders: 'Insiders',
-  1: `v${tailwind1.version}`,
-  2: `v${tailwind2.version}`,
-  3: `v${tailwind3.version}`,
+  insiders: ['Insiders', tailwindInsiders.version.split('.').pop()],
+  1: [`v${tailwind1.version}`],
+  2: [`v${tailwind2.version}`],
+  3: [`v${tailwind3.version}`],
 }
 
 export function Header({
@@ -168,8 +169,24 @@ function HeaderButton({
 function VersionSwitcher({ value, onChange }) {
   return (
     <Listbox value={value} onChange={onChange} as="div" className="relative">
-      <Listbox.Button className="text-gray-500 text-xs leading-5 font-semibold bg-gray-400/10 rounded-full py-1 px-3 flex items-center hover:bg-gray-400/20 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:shadow-highlight/4">
-        {versions[value]}
+      <Listbox.Button
+        data-test="version"
+        className="text-gray-500 text-xs leading-5 font-semibold bg-gray-400/10 rounded-full py-1 px-3 flex items-center hover:bg-gray-400/20 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-gray-700 dark:shadow-highlight/4"
+      >
+        {value === 'insiders' && (
+          <svg
+            viewBox="0 0 20 20"
+            className="w-4 h-4 fill-gray-400 dark:fill-gray-500 mr-1.5"
+            aria-hidden="true"
+          >
+            <path
+              fillRule="evenodd"
+              d="M8.485 3.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 3.495zM10 6a.75.75 0 01.75.75v3.5a.75.75 0 01-1.5 0v-3.5A.75.75 0 0110 6zm0 9a1 1 0 100-2 1 1 0 000 2z"
+              clipRule="evenodd"
+            />
+          </svg>
+        )}
+        {versions[value][0]}
         <svg
           width="6"
           height="3"
@@ -187,37 +204,82 @@ function VersionSwitcher({ value, onChange }) {
         </svg>
       </Listbox.Button>
       <div className="absolute top-full right-0 mt-2 rounded-lg shadow-lg">
-        <Listbox.Options className="overflow-hidden py-1 w-44 rounded-lg bg-white ring-1 ring-gray-900/10 text-sm leading-6 font-semibold text-gray-700 space-y-1 dark:bg-gray-800 dark:ring-0 dark:text-gray-300 dark:shadow-highlight/4">
+        <Listbox.Options className="overflow-hidden py-1 w-52 rounded-lg bg-white ring-1 ring-gray-900/10 text-sm leading-6 font-semibold text-gray-700 dark:bg-gray-800 dark:ring-0 dark:text-gray-300 dark:shadow-highlight/4">
           {Object.entries(versions)
             .sort(([a], [z]) => parseInt(z, 10) - parseInt(a, 10))
-            .map(([version, fullVersion]) => (
+            .map(([version, [label, subLabel]], versionIndex) => (
               <Listbox.Option
                 key={version}
                 value={version}
-                className={({ selected, active }) =>
+                data-test={`version-${version}`}
+                className={({ active, selected }) =>
                   clsx(
-                    'flex items-center justify-between px-3 py-1 cursor-pointer',
+                    'cursor-pointer',
+                    versionIndex > 0 && version !== 'insiders' && 'mt-1',
                     active && !selected && 'text-gray-900 dark:text-white',
-                    active && 'bg-gray-50 dark:bg-gray-600/30',
-                    selected && 'text-sky-500 dark:text-sky-400'
+                    version === 'insiders' &&
+                      'mt-[calc(theme(spacing.2)+1px)] relative before:absolute before:bottom-full before:mb-1 before:inset-x-0 before:h-px before:bg-gray-100 dark:before:bg-gray-600/30 before:pointer-events-none'
                   )
                 }
               >
-                {({ selected }) => (
-                  <>
-                    {fullVersion}
-                    {selected && (
-                      <svg width="24" height="24" fill="none">
-                        <path
-                          d="m6 13 4 4 8-10"
-                          stroke="currentColor"
-                          strokeWidth="2"
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
+                {({ active, selected }) => (
+                  <div
+                    className={clsx(
+                      'px-3',
+                      active && 'bg-gray-50 dark:bg-gray-600/30',
+                      version === 'insiders' ? 'pt-1 pb-2' : 'py-1'
                     )}
-                  </>
+                  >
+                    <div className="flex items-center justify-between">
+                      <div
+                        className={clsx(
+                          selected && 'text-sky-500 dark:text-sky-400'
+                        )}
+                      >
+                        {label}
+                        {subLabel && (
+                          <span
+                            className={clsx(
+                              'text-xs',
+                              selected
+                                ? 'text-inherit'
+                                : active
+                                ? 'text-gray-700 dark:text-gray-200'
+                                : 'text-gray-500 dark:text-gray-400'
+                            )}
+                          >{` (${subLabel})`}</span>
+                        )}
+                      </div>
+                      {selected && (
+                        <svg
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          aria-hidden="true"
+                          className="w-6 h-6 stroke-sky-500 dark:stroke-sky-400"
+                        >
+                          <path
+                            d="m6 13 4 4 8-10"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                      )}
+                    </div>
+                    {version === 'insiders' && (
+                      <div
+                        className={clsx(
+                          'font-normal text-xs block mt-0.5',
+                          active
+                            ? 'text-gray-600 dark:text-gray-300'
+                            : 'dark:text-gray-400 text-gray-500'
+                        )}
+                      >
+                        Insiders builds are unstable, and your demo may break
+                        when a new build is released.
+                      </div>
+                    )}
+                  </div>
                 )}
               </Listbox.Option>
             ))}

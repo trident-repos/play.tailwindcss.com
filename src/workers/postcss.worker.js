@@ -96,7 +96,7 @@ addEventListener('message', async (event) => {
                 event.data.lsp.context
               )
             ),
-          []
+          { suggestions: [] }
         )
         break
       case 'completeString':
@@ -196,6 +196,7 @@ addEventListener('message', async (event) => {
 
     const result = await compileWorker.emit({
       ...event.data,
+      skipIntelliSense: state ? event.data.skipIntelliSense : false,
       _isFreshBuild: isFreshBuild,
       html,
       css,
@@ -265,6 +266,7 @@ addEventListener('message', async (event) => {
       state.screens = isObject(state.config.theme.screens)
         ? Object.keys(state.config.theme.screens)
         : []
+      state.editor.readDirectory = () => []
       state.editor.getConfiguration = () => ({
         editor: {
           tabSize: 2,
@@ -280,6 +282,9 @@ addEventListener('message', async (event) => {
             invalidConfigPath: 'error',
             invalidTailwindDirective: 'error',
             recommendedVariantOrder: 'warning',
+          },
+          experimental: {
+            classRegex: [],
           },
         },
       })

@@ -1,5 +1,17 @@
 name: Upgrade Tailwind
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Tailwind CSS version'
+        required: false
+        default: 'latest'
+        type: string
+      insidersVersion:
+        description: 'Tailwind CSS insiders version'
+        required: false
+        default: 'insiders'
+        type: string
 jobs:
   upgrade-tailwindcss:
     runs-on: ubuntu-latest
@@ -8,8 +20,11 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: '15'
-      - run: |
-          npm install tailwindcss@latest tailwindcss-insiders@npm:tailwindcss@insiders --save-exact --legacy-peer-deps
+      - uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 3
+          max_attempts: 18
+          command: npm install tailwindcss@${{ inputs.version }} tailwindcss-insiders@npm:tailwindcss@${{ inputs.insidersVersion }} --save-exact --legacy-peer-deps
       - run: |
           NEW_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss\": \"\([^\"]*\).*$/\1/p')
           NEW_INSIDERS_VERSION=$(git diff -- package.json | sed -n 's/^\+.*\"tailwindcss-insiders\": \"npm:tailwindcss@\([^\"]*\).*$/\1/p')
@@ -23,6 +38,16 @@ jobs:
         run: echo "PR_TITLE=Upgrade \`insiders\` to \`v$NEW_INSIDERS_VERSION\`" >> $GITHUB_ENV
       - if: ${{ env.PR_TITLE }}
         name: Create Pull Request
+        id: pr
         uses: peter-evans/create-pull-request@v4
         with:
+          token: ${{ secrets.PAT }}
           title: ${{ env.PR_TITLE }}
+          commit-message: ${{ env.PR_TITLE }}
+      - name: Enable Pull Request Automerge
+        if: steps.pr.outputs.pull-request-operation == 'created'
+        uses: peter-evans/enable-pull-request-automerge@v2
+        with:
+          token: ${{ secrets.PAT }}
+          pull-request-number: ${{ steps.pr.outputs.pull-request-number }}
+          merge-method: squash

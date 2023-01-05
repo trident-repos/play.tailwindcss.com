@@ -30,6 +30,12 @@ export function setupCssMode(content, onChange, worker, getEditor) {
 
   return {
     getModel: () => model,
+    getValue: () =>
+      model
+        ?.getValue()
+        .replace(/@config\s*('[^']*'|"[^"]*")(\s*;)?/g, (m) =>
+          m.replace(/./g, ' ')
+        ),
     updateDecorations: () => updateDecorations(),
     activate: () => {
       if (!model) {
@@ -44,17 +50,41 @@ export function setupCssMode(content, onChange, worker, getEditor) {
 
         const _provideCompletionItems =
           CompletionAdapter.prototype.provideCompletionItems
-        CompletionAdapter.prototype.provideCompletionItems = function (
+        CompletionAdapter.prototype.provideCompletionItems = async function (
           originalModel,
           ...rest
         ) {
           if (!this._provideCompletionItems) {
             this._provideCompletionItems = _provideCompletionItems.bind(this)
           }
-          return this._provideCompletionItems(
+          let result = await this._provideCompletionItems(
             originalModel === model ? proxyModel : originalModel,
             ...rest
           )
+          if (!result?.suggestions) {
+            return result
+          }
+          return {
+            ...result,
+            suggestions: result.suggestions.flatMap((suggestion) => {
+              if (suggestion.kind === 1 && suggestion.label === 'calc()') {
+                return [
+                  suggestion,
+                  {
+                    ...suggestion,
+                    label: 'theme()',
+                    sortText: 'theme()',
+                    filterText: 'theme',
+                    insertText: 'theme($1)',
+                    documentation:
+                      'Use the `theme()` function to access your Tailwind config values using dot notation.',
+                    command: { title: '', id: 'editor.action.triggerSuggest' },
+                  },
+                ]
+              }
+              return [suggestion]
+            }),
+          }
         }
         disposables.push({
           dispose() {
@@ -127,7 +157,7 @@ export function setupCssMode(content, onChange, worker, getEditor) {
                   markers.filter(
                     (marker) =>
                       marker.code !== 'unknownAtRules' ||
-                      !/@(tailwind|screen|responsive|variants|layer|___)$/.test(
+                      !/@(tailwind|screen|responsive|variants|layer|config|___)$/.test(
                         marker.message
                       )
                   )
@@ -141,7 +171,7 @@ export function setupCssMode(content, onChange, worker, getEditor) {
 
         disposables.push(
           monaco.languages.registerCompletionItemProvider('tailwindcss', {
-            triggerCharacters: [' ', '"', "'", '.'],
+            triggerCharacters: [' ', '"', "'", '.', '('],
             provideCompletionItems: async function (model, position) {
               if (!worker.current) return { suggestions: [] }
               const { result } = await requestResponse(worker.current, {
@@ -327,7 +357,7 @@ const language = {
       ['[@](layer)', { token: 'keyword', next: '@layerheader' }],
       ['[@](page|content|font-face|-moz-document)', { token: 'keyword' }],
       [
-        '[@](charset|namespace)',
+        '[@](charset|namespace|config)',
         { token: 'keyword', next: '@declarationbody' },
       ],
       [
@@ -616,4 +646,9 @@ function augmentCss(css) {
     .replace(/@layer([^{]{3,})\{/g, (_m, p1) => {
       return `@media(_)${' '.repeat(p1.length - 3)}{`
     })
+    .replace(/@config\s*('[^']*'|"[^"]*")(\s*;)?/g, (m) => m.replace(/./g, ' '))
+    .replace(
+      /(\b(?:theme|config)\()([^)]*)/g,
+      (_match, prefix, inner) => `${prefix}${inner.replace(/[.[\]]/g, '_')}`
+    )
 }

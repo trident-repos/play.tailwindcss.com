@@ -270,12 +270,13 @@ export async function processCss(
       state.classNames = await extractClasses(lspRoot)
     }
     state.separator = separator
-    state.version =
-      tailwindVersion === '1'
-        ? require('tailwindcss-v1/package.json?fields=version').version
-        : tailwindVersion === '2'
-        ? require('tailwindcss-v2/package.json?fields=version').version
-        : require('tailwindcss/package.json?fields=version').version
+    state.version = {
+      1: require('tailwindcss-v1/package.json?fields=version').version,
+      2: require('tailwindcss-v2/package.json?fields=version').version,
+      3: require('tailwindcss/package.json?fields=version').version,
+      insiders: require('tailwindcss-insiders/package.json?fields=version')
+        .version,
+    }[tailwindVersion]
     state.editor = {
       userLanguages: {},
       capabilities: {},
